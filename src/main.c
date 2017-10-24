@@ -103,13 +103,7 @@ void sigint_handler(int sig)
 	thread_kill=1;
 }
 
-/*
- inotifywait -m /home/jcrespo/Documentos -e close_write  -e moved_to |
- while read path action file; do
- echo "The file '$file' appeared in directory '$path' via '$action'"
- # do something with the file
- done
- */
+
 
 int inotify_loop() {
 
@@ -203,4 +197,37 @@ int inotify_loop() {
 	/*closing the INOTIFY instance*/
 	close(fd);
 	return 1;
+}
+
+void * printer_handler(void * args)
+{
+	int serial_bytes_rx, msg_queue_rx;
+
+	printf("Inicio printer_handler\n");
+
+	errcode_t printer_status = 0xFF; //init
+
+	// Queue
+	struct queue_msgbuf msg;
+	int size = sizeof(msg.info);
+	msg.mtype=0xFF; // init.
+
+	while(!threads_kill){
+
+		//recibir de la queue
+		if((msg_queue_rx=msgrcv(msqid, &msg, size, TCP2SERIAL_MSG,IPC_NOWAIT))>0){
+			//enviar al puerto
+			strcat (msg.mtext,"\r\n");
+			printf("sending serial data\n");
+			serial_send(msg.mtext,strlen(msg.mtext));
+			memset(&msg,0, sizeof(msg));
+		}
+		usleep(THREAD_WAIT);
+	}
+
+	// Eliminamos la queue
+	msgctl(msqid, IPC_RMID, NULL);
+
+	printf("Fin printer_handler\n");
+	return NULL;
 }
