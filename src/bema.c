@@ -2,7 +2,7 @@
 #include "usb.h"
 #include "error.h"
 
-/*
+/**
 	Initializes printer
 	@return
 	int16_t: <0 if error initializing, 0 otherwise
@@ -11,8 +11,10 @@ int16_t prn_init(void){
 	int16_t ret=ERR_OK;
 		
 	if(usb_init()<0){
+		printf("ERROR: usb_init\n");
 		ret=-1;
 	}else if(prn_operation_mode(1)<0){ // Modo ESC/POS
+		printf("ERROR: prn_op_mode\n");
 		ret=2;
 	}else{
 		memset(bema_status,0,sizeof(bema_status));
@@ -29,10 +31,10 @@ int16_t prn_init(void){
 int16_t prn_get_status(void){
 	int16_t ret;
 	time_t now = time(NULL);
-
+	int16_t status_refreshed = 0;
 	//Si ha pasado mas de PRN_STATUS_REFRESH_TIME segundos hay que actualizar
 	if(now>(bema_status.time_status_change+PRN_STATUS_REFRESH_TIME))
-		prn_status_refresh(); //ignoro el retorno, no me molesta
+		status_refreshed=prn_status_refresh(); //ignoro el retorno, no me molesta
 
 	// Hay prioridad en los errores.De arriba hacia abajo, autoexcluyentes
 	if(bema_status.not_plugged){
@@ -53,11 +55,13 @@ int16_t prn_get_status(void){
 		ret=ERR_PRN_BUSY;
 	}else
 		ret=ERR_OK;		
-	 
+
+	if(status_refreshed!=0) // No se ha podido actualizar el status
+		ret=ERR_PRN_OFFLINE;
 	return ret;
 }
 
-/*
+/**
 	Set operation mode for Bematech printer.
 	@params	
 	uint8_t mode:0 for Bema mode, 1 for Esc/Pos mode
@@ -78,7 +82,7 @@ int16_t prn_operation_mode(uint8_t mode){
 	return ret;
 }
 
-/*
+/**
 	Set Bematech printer for automatic error response.We get all possible warnings
 	@return
 	int16_t: -1 if error, 0 otherwise
@@ -91,18 +95,17 @@ int16_t prn_asb_mode(){
 	return ret;
 }
 
-/*
+/**
 	Refresh status
 	@return
-	bool: 1:true if it´s busy 
-			0:false
+	bool: 	0: OK
 			-1:error sending
 			-2:error receiving data 
 			-3:error of data received 
 */
 int16_t prn_status_refresh(void){
 	uint16_t ret=0;
-	unsigned char rx_buffer[8]; // arbitrary size, we need to 
+	unsigned char rx_buffer[8];
 	if(prn_data_send(PRN_CMD_EXT_STATUS,sizeof(PRN_CMD_EXT_STATUS))<0){
 		ret=-1;
 	}else if(prn_data_receive(rx_buffer,PRN_CMD_EXT_STATUS_RESP_SIZE)<0){
@@ -130,7 +133,7 @@ int16_t prn_status_refresh(void){
 	return ret;
 }
 
-/*
+/**
 	Send data to Bematech printer
 	@params
 	uchar *data: data to send
@@ -152,7 +155,7 @@ int16_t prn_data_send(unsigned char *data ,uint16_t size){
 }
 
 
-/*
+/**
 	Receive data from printer
 	@params
 	uchar *data: buffer where receive
@@ -173,7 +176,7 @@ int16_t prn_data_receive(unsigned char *data ,uint16_t size){
 	return ret==size? 0:-1;
 }
 
-/*
+/**
 	Receive data from printer
 	@params
 	uchar *data2print: buffer data to print
@@ -206,6 +209,10 @@ int16_t prn_print_24bits(unsigned char *data2print, uint16_t length){
 	return err;
 }
 
+/**
+ *
+ *
+ */
 int16_t prn_print(unsigned char *data2print, uint16_t length){
 	int16_t ret;
 	int16_t err = ERR_OK;
@@ -230,7 +237,7 @@ int16_t prn_print(unsigned char *data2print, uint16_t length){
 	return err;
 }
 
-/*
+/**
 	Transforma el archivo a imprimir al formato de 24bits de la printer
 	@params
 	FILE *data2print: buffer data to print
@@ -245,7 +252,7 @@ int16_t prn_fill_prebuf_24bits(FILE *data2print, unsigned char *buffer_printer, 
 	return ret;
 }
 
-/*
+/**
 	Llena el buffer de la printer para la futura impresion
 	@params
 	uchar *data2print: buffer data to print

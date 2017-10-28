@@ -212,18 +212,44 @@ void * printer_handler(void * args)
 	int size = sizeof(msg.info);
 	msg.mtype=0xFF; // init.
 
+	// Primera inicialización de la impresora
+	while(printer_init()!=ERR_OK){
+		printf("ERROR: main printer_init\n");
+		sleep(3);
+	}
+
 	while(!threads_kill){
 
+		printer_status = 0xFF; //init
+		printer_status=prn_get_status();
 		//recibir de la queue
-		if((msg_queue_rx=msgrcv(msqid, &msg, size, TCP2SERIAL_MSG,IPC_NOWAIT))>0){
-			//enviar al puerto
-			strcat (msg.mtext,"\r\n");
-			printf("sending serial data\n");
-			serial_send(msg.mtext,strlen(msg.mtext));
+		if((printer_status==ERR_OK)&&(msg_queue_rx=msgrcv(msqid, &msg, size,HOST2PRINTER_PRINTER_REQ ,IPC_NOWAIT))>0){
+
+			printf("Rx printer Request: %s \n",msg.info.mfile_name);
+			//envío a la printer
 			memset(&msg,0, sizeof(msg));
+		}else if((printer_status==ERR_PRN_ERROR_R)||(printer_status=ERR_PRN_CUTTER)){
+			// reset de printer
+			prn_reset();
+
 		}
+
+		if((printer_status==ERR_PRN_PLUG)||(printer_status=ERR_PRN_OFFLINE)){
+
+
+		}
+
+
+
+
 		usleep(THREAD_WAIT);
+
+
+
 	}
+
+
+
 
 	// Eliminamos la queue
 	msgctl(msqid, IPC_RMID, NULL);
