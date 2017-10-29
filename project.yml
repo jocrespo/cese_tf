@@ -71,6 +71,8 @@
       :*:
         - -fprofile-arcs
         - -ftest-coverage
+        - -pthread
+        - -lusb-1.0
 
 #:tools:
 # Ceedling defaults to using gcc for compiling, linking, etc.
