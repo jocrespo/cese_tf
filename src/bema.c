@@ -26,10 +26,10 @@ int32_t prn_data_receive(unsigned char *data ,uint16_t size);
 	int16_t: <0 if error initializing, 0 otherwise
 */
 int16_t prn_init(void){
-	int16_t ret=ERR_OK;
-		
-	if(usb_comm_init()<0){
-		printf("ERROR: usb_init\n");
+	int16_t ret;
+	ret=usb_comm_init();
+	if(ret){
+		printf("ERROR: usb_init: %d\n",ret);
 		ret=-1;
 	}else if(prn_operation_mode(1)<0){ // Modo ESC/POS
 		printf("ERROR: prn_op_mode\n");
@@ -45,7 +45,7 @@ int16_t prn_init(void){
 /**
 	Reinitializes printer
 	@return
-	int16_t: <0 if error initializing, 0 otherwise
+	int16_t: 0 OK !=0 error
 */
 int16_t prn_reinit(void){
 	return usb_comm_reinit();
@@ -86,6 +86,7 @@ int16_t prn_get_status(void){
 
 	if(status_refreshed!=0) // No se ha podido actualizar el status
 		ret=ERR_PRN_OFFLINE;
+
 	return ret;
 }
 
@@ -139,26 +140,30 @@ int16_t prn_status_refresh(void){
 	unsigned char rx_buffer[8];
 	if(prn_data_send(PRN_CMD_EXT_STATUS,sizeof(PRN_CMD_EXT_STATUS))<0){
 		ret=-1;
-	}else if(prn_data_receive(rx_buffer,PRN_CMD_EXT_STATUS_RESP_SIZE)<0){
-		ret=-2;
-	}else{ // We got the data
-		if ((rx_buffer[0] & 0x03) || !(rx_buffer[0] & 0x80)
-       || (rx_buffer[1] & 0x08) || !(rx_buffer[1] & 0x01)
-       || (rx_buffer[2] & 0x03) || !(rx_buffer[2] & 0x90)
-       || (rx_buffer[3] & 0x2a) || !(rx_buffer[3] & 0x91)
-		 ||!(rx_buffer[4] & 0x80))
-		{
-			ret=-3; //incorrect data
-		}else{
-			// Refresh status	
-			bema_status.offline= rx_buffer[0]&0x08?1:0;
-			bema_status.busy= rx_buffer[0]&0x10?0:1;
-			bema_status.prn_opened= rx_buffer[1]&0x80?1:0;
-			bema_status.no_paper= ((rx_buffer[1]&0x20)||(rx_buffer[1]&0x06))?1:0;
-			bema_status.error_r= rx_buffer[2]&0x40?1:0;
-			bema_status.error_ur= rx_buffer[2]&0x20?1:0;
-			bema_status.error_cutter= rx_buffer[2]&0x08?1:0;
-			bema_status.time_status_change= time(NULL);
+	}else{
+		usleep(300000); // tiempo de seguridad
+		if(prn_data_receive(rx_buffer,PRN_CMD_EXT_STATUS_RESP_SIZE)<0){
+			ret=-2;
+		}else{ // We got the data
+			if ((rx_buffer[0] & 0x03) || !(rx_buffer[0] & 0x80)
+		   || (rx_buffer[1] & 0x08) || !(rx_buffer[1] & 0x01)
+		   || (rx_buffer[2] & 0x03) || !(rx_buffer[2] & 0x90)
+		   || (rx_buffer[3] & 0x2a) || !(rx_buffer[3] & 0x91)
+			 ||!(rx_buffer[4] & 0x80))
+			{
+				ret=-3; //incorrect data
+			}else{
+				// Refresh status
+				bema_status.offline= rx_buffer[0]&0x08?1:0;
+				bema_status.busy= rx_buffer[0]&0x10?0:1;
+				bema_status.prn_opened= rx_buffer[1]&0x80?1:0;
+				bema_status.no_paper= ((rx_buffer[1]&0x20)||(rx_buffer[1]&0x06))?1:0;
+				bema_status.error_r= rx_buffer[2]&0x40?1:0;
+				bema_status.error_ur= rx_buffer[2]&0x20?1:0;
+				bema_status.error_cutter= rx_buffer[2]&0x08?1:0;
+				bema_status.time_status_change= time(NULL);
+				ret=ERR_OK;
+			}
 		}
 	}	
 	return ret;
