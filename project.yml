@@ -72,6 +72,14 @@
 # Ceedling defaults to using gcc for compiling, linking, etc.
 # As [:tools] is blank, gcc will be used (so long as it's in your system path)
 # See documentation to configure a given toolchain for use
+:tools:
+  :release_compiler:
+    :executable: avr-gcc
+    :arguments:
+		-std=gnu99 
+		-pthread 
+		-lusb-1.0 
+		-I.
 
 :plugins:
   :load_paths:
