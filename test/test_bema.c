@@ -58,12 +58,14 @@ void test_prn_get_status_devuelve_el_error_correcto(){
 	ret= prn_get_status();
 	TEST_ASSERT_EQUAL_INT16 (ret, ERR_PRN_COVER);
 
+	bema_status.offline=1;
+	ret= prn_get_status();
+	TEST_ASSERT_EQUAL_INT16 (ret, ERR_PRN_OFFLINE);
+
 	bema_status.not_plugged=1;
 	ret= prn_get_status();
 	TEST_ASSERT_EQUAL_INT16 (ret, ERR_PRN_PLUG);
 
-	bema_status.offline=1;
-	ret= prn_get_status();
-	TEST_ASSERT_EQUAL_INT16 (ret, ERR_PRN_OFFLINE);
+
 
 }
