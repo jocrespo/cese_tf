@@ -67,9 +67,9 @@ int16_t prn_get_status(void){
 
 	// Hay prioridad en los errores.De arriba hacia abajo, autoexcluyentes
 	if(bema_status.not_plugged){
-		ret=ERR_PRN_OFFLINE;
-	}else if(bema_status.offline){
 		ret=ERR_PRN_PLUG;
+	}else if(bema_status.offline){
+		ret=ERR_PRN_OFFLINE;
 	}else if(bema_status.prn_opened){
 		ret=ERR_PRN_COVER;
 	}else if(bema_status.no_paper){
