@@ -16,7 +16,7 @@ void setUp(){
 
 	// Estado de la impresora USB. Errores, activos con 1
 	struct prn_status {
-	    time_t time_status_change;   // Tiempo de la ultima actualización de estatus
+	    time_t time_status_change;   // Tiempo de la ultima actualizacion de estatus
 	    uint8_t not_plugged :1; // No conectada
 	    uint8_t offline :1;  	// Desconectada, no hay comunicación
 	    uint8_t error_ur :1; 	// Error no recuperable
