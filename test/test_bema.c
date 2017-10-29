@@ -15,18 +15,6 @@
 
 void setUp(){
 
-	// Estado de la impresora USB. Errores, activos con 1
-	struct prn_status {
-	    time_t time_status_change;   // Tiempo de la ultima actualizacion de estatus
-	    uint8_t not_plugged :1; // No conectada
-	    uint8_t offline :1;  	// Desconectada, no hay comunicación
-	    uint8_t error_ur :1; 	// Error no recuperable
-	    uint8_t error_r :1;  	// Error recuperable
-	    uint8_t no_paper :1;		// No hay papel
-	    uint8_t prn_opened :1;	// Tapa de printer abierta
-	    uint8_t error_cutter :1; // Error en el autocutter de papel
-	    uint8_t busy :1; // Printer ocupada
-	}bema_status;
 
 	memset(&bema_status,0,sizeof(bema_status));
 	bema_status.time_status_change=time(NULL)+1000; // Se fuerza que no se pida estatus a la printer en el test
