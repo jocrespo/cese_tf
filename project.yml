@@ -61,6 +61,8 @@
   :test:
     :compile:
       :*:
+        - -Wall
+        - -std=gnu99
         - -fprofile-arcs
         - -ftest-coverage
     :link:
