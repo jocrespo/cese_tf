@@ -74,7 +74,7 @@
 # See documentation to configure a given toolchain for use
 :tools:
   :release_compiler:
-    :executable: avr-gcc
+    :executable: gcc
     :arguments:
       -std=gnu99
       -pthread
