@@ -1,6 +1,24 @@
+#include <libusb-1.0/libusb.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "bema.h"
-#include "usb.h"
+#include "usb_comm.h"
 #include "error.h"
+
+
+
+
+
+int16_t prn_operation_mode(uint8_t );
+int16_t prn_asb_mode();
+int16_t prn_status_refresh(void);
+int32_t prn_data_send(unsigned char *data ,uint16_t size);
+int32_t prn_data_receive(unsigned char *data ,uint16_t size);
+
+
+
+
 
 /**
 	Initializes printer
@@ -10,17 +28,27 @@
 int16_t prn_init(void){
 	int16_t ret=ERR_OK;
 		
-	if(usb_init()<0){
+	if(usb_comm_init()<0){
 		printf("ERROR: usb_init\n");
 		ret=-1;
 	}else if(prn_operation_mode(1)<0){ // Modo ESC/POS
 		printf("ERROR: prn_op_mode\n");
 		ret=2;
 	}else{
-		memset(bema_status,0,sizeof(bema_status));
+		memset(&bema_status,0,sizeof(bema_status));
 		bema_status.not_plugged= 1;
 	}
 	return ret;
+}
+
+
+/**
+	Reinitializes printer
+	@return
+	int16_t: <0 if error initializing, 0 otherwise
+*/
+int16_t prn_reinit(void){
+	return usb_comm_reinit();
 }
 
 /**
@@ -73,8 +101,11 @@ int16_t prn_get_status(void){
 */
 int16_t prn_operation_mode(uint8_t mode){
 	int16_t ret;
+	char comando[4];
 	if(mode==0 || mode==1){
-		static unsigned char PRN_OP_MODE[]={0x1d,0xf9,0x35,mode};
+		static unsigned char PRN_OP_MODE[]={0x1d,0xf9,0x35};
+		memcpy(comando,PRN_OP_MODE,sizeof(PRN_OP_MODE));
+		comando[3]=mode;
 		ret=prn_data_send(PRN_OP_MODE,sizeof(PRN_OP_MODE));
 	}
 	else 
@@ -142,9 +173,9 @@ int16_t prn_status_refresh(void){
 	int16_t: -1 if error, 0 otherwise 
 	
 */
-int16_t prn_data_send(unsigned char *data ,uint16_t size){
+int32_t prn_data_send(unsigned char *data ,uint16_t size){
 	uint16_t ret=-1;
-	ret=usb_send(data,size);
+	ret=usb_comm_send(data,size);
 	if(ret<0){ // no hay comunicacion
 		bema_status.offline=1;
 	}else if(ret==size){
@@ -164,9 +195,9 @@ int16_t prn_data_send(unsigned char *data ,uint16_t size){
 	int16_t: -1 if error, 0 otherwise
 
 */
-int16_t prn_data_receive(unsigned char *data ,uint16_t size){
+int32_t prn_data_receive(unsigned char *data ,uint16_t size){
 	uint16_t ret;
-	ret=usb_receive(data,size);
+	ret=usb_comm_receive(data,size);
 	if(ret<0){ // no hay comunicacion
 		bema_status.offline=1;
 	}else if(ret==size){
@@ -193,11 +224,11 @@ int16_t prn_print_24bits(unsigned char *data2print, uint16_t length){
 	unsigned char data2send[1800]; // espacio de sobra para el comando, los datos(1728), y el line feed
 
 	//Envío los comandos necsesarios para que vaya imprimiendo la totalidad de datos requeridos
-	for (i= 0; ERR_OK == err && i < length; i+= 24 * LINEA_SZ) {
+	for (i= 0; ERR_OK == err && i < length; i+= 24 * PRN_LINEA_SZ) {
 		memcpy(data2send,PRN_24BITS_GRAPHICS_PRINT,sizeof(PRN_24BITS_GRAPHICS_PRINT)); // comando
 		size2send+=sizeof(PRN_24BITS_GRAPHICS_PRINT);
-		memcpy(data2send+size2send,data2print + i, 24 * LINEA_SZ);
-		size2send+=24 * LINEA_SZ; // datos del comando
+		memcpy(data2send+size2send,data2print + i, 24 * PRN_LINEA_SZ);
+		size2send+=24 * PRN_LINEA_SZ; // datos del comando
 		memcpy(data2send+size2send,PRN_CMD_LINE_FEED,sizeof(PRN_CMD_LINE_FEED));
 		size2send+=sizeof(PRN_CMD_LINE_FEED);
 		if (!prn_data_send(data2send,size2send)) {
@@ -207,6 +238,20 @@ int16_t prn_print_24bits(unsigned char *data2print, uint16_t length){
 		memset(data2send,0,sizeof(data2send)); // Limpieza de buffer
 	}
 	return err;
+}
+
+
+/**
+	Reset Bematech printer
+	@return
+	int16_t: -1 if error, 0 otherwise
+
+*/
+int16_t prn_reset(){
+	int16_t ret;
+
+	ret=prn_data_send(PRN_RESET,sizeof(PRN_RESET));
+	return ret;
 }
 
 /**
@@ -221,11 +266,11 @@ int16_t prn_print(unsigned char *data2print, uint16_t length){
 	unsigned char data2send[1800]; // espacio de sobra para el comando, los datos(1728), y el line feed
 
 	//Envío los comandos necsesarios para que vaya imprimiendo la totalidad de datos requeridos
-	for (i= 0; ERR_OK == err && i < length; i+= 24 * LINEA_SZ) {
+	for (i= 0; ERR_OK == err && i < length; i+= 24 * PRN_LINEA_SZ) {
 		memcpy(data2send,PRN_24BITS_GRAPHICS_PRINT,sizeof(PRN_24BITS_GRAPHICS_PRINT)); // comando
 		size2send+=sizeof(PRN_24BITS_GRAPHICS_PRINT);
-		memcpy(data2send+size2send,data2print + i, 24 * LINEA_SZ);
-		size2send+=24 * LINEA_SZ; // datos del comando
+		memcpy(data2send+size2send,data2print + i, 24 * PRN_LINEA_SZ);
+		size2send+=24 * PRN_LINEA_SZ; // datos del comando
 		memcpy(data2send+size2send,PRN_CMD_LINE_FEED,sizeof(PRN_CMD_LINE_FEED));
 		size2send+=sizeof(PRN_CMD_LINE_FEED);
 		if (!prn_data_send(data2send,size2send)) {
@@ -268,7 +313,7 @@ int16_t prn_fill_buffer(unsigned char *data2print, uint16_t length){
 	
 }
 
-
+/*
 void add(unsigned char *line)
 {
     uint8_t lines2;
@@ -281,3 +326,4 @@ void add(unsigned char *line)
 
     }
 }
+*/

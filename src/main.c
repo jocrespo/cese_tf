@@ -12,15 +12,17 @@
 #include <netdb.h>
 #include <signal.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <unistd.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <linux/inotify.h>v
+#include <sys/inotify.h>
 
 #include "msg_types.h"
 #include "main.h"
 #include "error.h"
+#include "bema.h"
+
+
+
 
 #define MAX_EVENT 20 // inotify puede leer 20 eventos en una lectura, tambien uso este valor como cantidad maxima de archivos en el registro
 
@@ -29,8 +31,8 @@
 
 
 
-void blockSign(void);
-void unblockSign(void);
+void bloquearSign(void);
+void desbloquearSign(void);
 
 /*
  * main.c
@@ -47,7 +49,7 @@ int main(void) {
 	key_t key = ftok("msg_key", 'b');
 
 	if ((msqid = msgget(key, 0666 | IPC_CREAT)) == -1) {
-		perror("msgget");
+		printf("msgget");
 		exit(1);
 	}else{
 		printf("msqid main:%d\n", msqid);
@@ -59,7 +61,7 @@ int main(void) {
 	sa.sa_flags = 0;
 	sigemptyset(&sa.sa_mask);
 	if (sigaction(SIGINT, &sa, NULL) == -1) {
-		perror("sigaction");
+		printf("sigaction");
 		exit(1);
 	}
 
@@ -67,7 +69,7 @@ int main(void) {
 	pthread_t printer_thread;
 	bloquearSign();
 	if (pthread_create(&printer_thread, NULL, printer_handler, NULL) < 0) {
-		perror("No puedo crear thread printer\n");
+		printf("No puedo crear thread printer\n");
 	}
 	desbloquearSign();
 
@@ -82,7 +84,7 @@ int main(void) {
 	return 0;
 }
 
-void blockSign(void) {
+void bloquearSign(void) {
 	sigset_t set;
 	int s;
 	sigemptyset(&set);
@@ -90,7 +92,7 @@ void blockSign(void) {
 	pthread_sigmask(SIG_BLOCK, &set, NULL);
 }
 
-void unblockSign(void) {
+void desbloquearSign(void) {
 	sigset_t set;
 	int s;
 	sigemptyset(&set);
@@ -126,7 +128,7 @@ int inotify_loop() {
 // Levanto inotify para monitorear si se crean archivos nuevos en /root
 	fd = inotify_init();
 	if (fd < 0) {
-		perror("Couldn't initialize inotify");
+		printf("Couldn't initialize inotify");
 	}
 
 	/*Monitorizo el folder /root y detecto cuando se cierra algún archivo tras haber sido escrito.*/
@@ -136,7 +138,7 @@ int inotify_loop() {
 		length = read(fd, buffer, sizeof(buffer));
 
 		if (length < 0) {
-			perror("read");
+			printf("read");
 		}
 
 		/*actually read return the list of change events happens. Here, read the change event one by one and process it accordingly.*/
@@ -161,12 +163,12 @@ int inotify_loop() {
 					memcpy(msg.info.mfile_name,event->name,NAME_LENGTH);
 					if(msgsnd(msqid,&msg,size,IPC_NOWAIT)<0){
 						// No se puede enviar, salimos...
-						perror("Cannot send file: %s\n", msg.info.mfile_name);
+						printf("Cannot send file: %s\n", msg.info.mfile_name);
 						return -1;
 					}
 
 				} else {
-					perror("Inotify mask error, file: %s\n", event->name);
+					printf("Inotify mask error, file: %s\n", event->name);
 				}
 
 			}
@@ -180,9 +182,9 @@ int inotify_loop() {
 		if((msg_queue_rx=msgrcv(msqid, &msg, size, PRINTER2HOST_PRINT_RESULT,IPC_NOWAIT))>0){
 
 			if(msg.info.mresult != ERR_OK)
-				perror("Printer error, file: %s\n", msg.info.mfile_name);
+				printf("Printer error, file: %s\n", msg.info.mfile_name);
 			else if (remove((const char*)msg.info.mfile_name)!= ERR_OK)
-				perror("Cannot delete file: %s\n", msg.info.mfile_name);
+				printf("Cannot delete file: %s\n", msg.info.mfile_name);
 
 			// Eliminamos del registro en cualquier caso
 			memset(files_reg[msg.info.mfile_index],0, NAME_LENGTH);
@@ -213,12 +215,12 @@ void * printer_handler(void * args)
 	msg.mtype=0xFF; // init.
 
 	// Primera inicialización de la impresora
-	while(printer_init()!=ERR_OK){
+	while(prn_init()!=ERR_OK){
 		printf("ERROR: main printer_init\n");
 		sleep(3);
 	}
 
-	while(!threads_kill){
+	while(!thread_kill){
 
 		printer_status = 0xFF; //init
 		printer_status=prn_get_status();
@@ -230,30 +232,23 @@ void * printer_handler(void * args)
 			memset(&msg,0, sizeof(msg));
 		}else if((printer_status==ERR_PRN_ERROR_R)||(printer_status=ERR_PRN_CUTTER)){
 			// reset de printer
-			prn_reset();
+			if(prn_reset()!=ERR_OK)
+				printer_status=ERR_PRN_OFFLINE;
 
 		}
 
 		if((printer_status==ERR_PRN_PLUG)||(printer_status=ERR_PRN_OFFLINE)){
-
-
+			while(prn_reinit()!=ERR_OK){
+			sleep(2);
+			printf("Perdida de printer");
+			}
 		}
-
-
-
-
 		usleep(THREAD_WAIT);
-
-
-
 	}
-
-
-
-
 	// Eliminamos la queue
 	msgctl(msqid, IPC_RMID, NULL);
 
 	printf("Fin printer_handler\n");
 	return NULL;
 }
+

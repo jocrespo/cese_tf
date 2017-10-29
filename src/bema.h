@@ -1,3 +1,10 @@
+#ifndef INCLUDE_BEMA_H_
+#define INCLUDE_BEMA_H_
+
+
+#include <time.h>
+#include <stdint.h>
+
 #define PRN_CMD_EXT_STATUS_RESP_SIZE 5  // Tamaño de la respuesta de la peticion de estatus
 
 #define PRN_LINEA_SZ 72
@@ -20,6 +27,9 @@ static unsigned char PRN_CMD_EXT_STATUS[]={ 0x1D, 0xF8, 0x31 };
 
 // Envio automatico de cambios en estatus. 
 static unsigned char PRN_ASB[]={ 0x1d, 0x61, 0xff };
+
+// Reset de printer
+static unsigned char PRN_RESET[]={ 0x1d, 0xF8, 0x76 };
 
 // comando de impresion en formato raster
 static unsigned char PRN_RASTER_PRINT[]={0x1d,0x76,0x30,0x30};
@@ -52,4 +62,8 @@ struct print_prebuffer{
 
 //Funciones exportadas
 int16_t prn_init(void);
+int16_t prn_reinit(void);
 int16_t prn_get_status(void);
+int16_t prn_reset(void);
+
+#endif /* INCLUDE_BEMA_H_ */

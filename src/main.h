@@ -10,6 +10,13 @@
 
 #define THREAD_WAIT 1
 
+
+void sigint_handler(int);
+void * printer_handler(void * args);
+int inotify_loop();
+
+
+
 int thread_kill; // Flag de muerte para el thread de la printer
 
 #endif /* INCLUDE_MAIN_H_ */
