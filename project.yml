@@ -63,6 +63,8 @@
       :*:
         - -Wall
         - -std=gnu99
+        - -pthread
+        - -lusb-1.0
         - -fprofile-arcs
         - -ftest-coverage
     :link:
