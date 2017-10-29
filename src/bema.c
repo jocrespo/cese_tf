@@ -1,6 +1,7 @@
 #include <libusb-1.0/libusb.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "bema.h"
 #include "usb_comm.h"
