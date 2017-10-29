@@ -76,10 +76,9 @@
   :release_compiler:
     :executable: avr-gcc
     :arguments:
-		-std=gnu99 
-		-pthread 
-		-lusb-1.0 
-		-I.
+      -std=gnu99
+      -pthread
+      -lusb-1.0 -I.
 
 :plugins:
   :load_paths:
