@@ -61,7 +61,6 @@
   :test:
     :compile:
       :*:
-        - -Wall
         - -std=gnu99
         - -pthread
         - -lusb-1.0
