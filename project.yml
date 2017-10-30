@@ -57,6 +57,9 @@
     int8:     INT8
     bool:     UINT8
   :mock_path: build/mocks
+  :includes:
+    - bema.h
+    - usb_comm.h
 
 :flags:
   :test:
