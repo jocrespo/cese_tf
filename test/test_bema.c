@@ -22,7 +22,7 @@ void setUp(){
 }
 
 void tearDown(){
-	;
+
 }
 
 /** Se comprueba que la funcion que devuelve el estado de la printer en funcion de su estructura de estatus es correcta.
@@ -67,5 +67,23 @@ void test_prn_get_status_devuelve_el_error_correcto(){
 	TEST_ASSERT_EQUAL_INT16 (ret, ERR_PRN_PLUG);
 
 
+
+}
+
+/**
+ * Se comprueba que la funcion operation_mode recibe los parametros correctos o no. Y se chequea el valor de retorno
+ */
+void test_prn_operation_mode_parametro_correcto(){
+	int16_t ret;
+
+	ret= prn_operation_mode(0);
+	TEST_ASSERT_EQUAL_INT16 (ret, ERR_OK);
+
+	ret= prn_operation_mode(1);
+	TEST_ASSERT_EQUAL_INT16 (ret, ERR_OK);
+
+	// valor incorrecto
+	ret= prn_operation_mode(0);
+	TEST_ASSERT_EQUAL_INT16 (ret, ERR_PRN_DATA);
 
 }
