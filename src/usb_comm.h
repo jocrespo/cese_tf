@@ -1,3 +1,6 @@
+#ifndef INCLUDE_USB_COMM_H_
+#define INCLUDE_USB_COMM_H_
+
 #include <libusb-1.0/libusb.h>
 
 #define USB_READ_TOUT 10
@@ -25,3 +28,5 @@ usb_prn_st prn;
 static libusb_context *usb_context;
 libusb_device_handle *usb_handle;
 int interfaces; // interfaces del device
+
+#endif /* INCLUDE_USB_COMM_H_ */
