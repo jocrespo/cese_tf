@@ -56,6 +56,7 @@
     uint32:   UINT32
     int8:     INT8
     bool:     UINT8
+  :mock_path: build/mocks
 
 :flags:
   :test:
