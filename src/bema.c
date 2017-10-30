@@ -11,13 +11,6 @@
 
 
 
-int16_t prn_operation_mode(uint8_t );
-int16_t prn_asb_mode();
-int16_t prn_status_refresh(void);
-int32_t prn_data_send(unsigned char *data ,uint16_t size);
-int32_t prn_data_receive(unsigned char *data ,uint16_t size);
-
-
 
 
 
