@@ -1,3 +1,6 @@
+#ifndef INCLUDE_ERROR_H_
+#define INCLUDE_ERROR_H_
+
 typedef enum {
 	ERR_OK=0,
     ERR_PRN_PLUG,
@@ -18,3 +21,5 @@ typedef enum {
 	ERR_USB_CLAIMING,
 
 } errcode_t;
+
+#endif /* INCLUDE_ERROR_H_ */
