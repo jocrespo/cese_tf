@@ -10,7 +10,6 @@
 #include <string.h>
 #include "unity.h"
 #include "bema.h"
-#include "bema.c"
 #include "error.h"
 #include "usb_comm.h"
 
