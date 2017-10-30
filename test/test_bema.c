@@ -15,10 +15,9 @@
 
 void setUp(){
 
-
 	memset(&bema_status,0,sizeof(bema_status));
 	bema_status.time_status_change=time(NULL)+1000; // Se fuerza que no se pida estatus a la printer en el test
-
+	prn_data_send_Ignore();
 }
 
 void tearDown(){
@@ -83,7 +82,7 @@ void test_prn_operation_mode_parametro_correcto(){
 	TEST_ASSERT_EQUAL_INT16 (ret, ERR_OK);
 
 	// valor incorrecto
-	ret= prn_operation_mode(0);
+	ret= prn_operation_mode(6);
 	TEST_ASSERT_EQUAL_INT16 (ret, ERR_PRN_DATA);
 
 }
