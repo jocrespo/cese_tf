@@ -13,6 +13,7 @@ int32_t usb_comm_send(unsigned char *data2tx ,uint16_t size);
 int32_t usb_comm_receive(unsigned char *data2rx ,uint16_t size);
 int16_t usb_comm_init(void);
 int16_t usb_comm_reinit(void);
+void usb_comm_close();
 
 typedef struct {
     int v_id;

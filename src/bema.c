@@ -44,7 +44,8 @@ int16_t prn_init(void){
 */
 int16_t prn_reinit(void){
 	printer_init = 0;
-	return usb_comm_reinit();
+	usb_comm_close();
+	return prn_init();
 }
 
 /**

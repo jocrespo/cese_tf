@@ -5,7 +5,7 @@
 #include "error.h"
 
 
-void usb_comm_close();
+
 
 /**
  * Envía size bytes desde el puntero data2tx. Mediante bulk transfer usb
@@ -54,20 +54,6 @@ int32_t usb_comm_receive(unsigned char *data2rx ,uint16_t size){
     return err ? err : received;
 }
 
-/**
- * Reinicializa libusb
- *
- * @return: 0 ok, !=0 error
- */
-int16_t usb_comm_reinit(void){
-	int16_t ret;
-	usb_comm_close();
-	libusb_exit(usb_context);
-
-	ret = usb_comm_init();
-
-	return ret;
-}
 
 /**
  * Inicializa libusb y detecta la printer y guarda el device en la struct de printer usb_prn_st
@@ -229,11 +215,12 @@ void usb_comm_close()
 {
     if (usb_handle) {
     	int8_t i;
-	int8_t ret;
+    	int8_t ret;
         for (i= 0; i < interfaces; i++) {
             ret=libusb_release_interface(usb_handle, i);
 	    if(ret)printf("libusb error libusb_release_interface: %d with int %d\n",ret,i);
         }
         libusb_close(usb_handle);
     }
+    libusb_exit(usb_context);
 }
