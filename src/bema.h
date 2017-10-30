@@ -60,6 +60,7 @@ struct print_prebuffer{
 	uint16_t lines; // bytes en el buffer
 }prebuffer;
 
+uint8_t printer_init; //flag de inicializacion de la printer
 
 int16_t prn_init(void);
 int16_t prn_reinit(void);

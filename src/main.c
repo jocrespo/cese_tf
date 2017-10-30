@@ -132,7 +132,7 @@ int inotify_loop() {
 	}
 
 	/*Monitorizo el folder /root y detecto cuando se cierra algún archivo tras haber sido escrito.*/
-	wd = inotify_add_watch(fd, "/root", IN_CLOSE_WRITE);
+	wd = inotify_add_watch(fd, "/home/tecno/", IN_CLOSE_WRITE);
 
 	while (!thread_kill) {
 		length = read(fd, buffer, sizeof(buffer));
@@ -193,7 +193,7 @@ int inotify_loop() {
 		sleep(THREAD_WAIT); // 1 segundo de espera entre iteraciones
 
 	}
-	/*removing the “/tmp” directory from the watch list.*/
+	/*removing the directory from the watch list.*/
 	inotify_rm_watch(fd, wd);
 
 	/*closing the INOTIFY instance*/
@@ -203,7 +203,8 @@ int inotify_loop() {
 
 void * printer_handler(void * args)
 {
-	int serial_bytes_rx, msg_queue_rx;
+	
+	int msg_queue_rx;
 
 	printf("Inicio printer_handler\n");
 
@@ -214,6 +215,17 @@ void * printer_handler(void * args)
 	int size = sizeof(msg.info);
 	msg.mtype=0xFF; // init.
 
+	// Init queue
+	key_t key = ftok("msg_key", 'b');
+
+	if ((msqid = msgget(key, 0666 | IPC_CREAT)) == -1) {
+		printf("msgget");
+		exit(1);
+	}else{
+		printf("msqid main:%d\n", msqid);
+	}
+	printf("calling printer_init\n");
+	printer_init = 0;
 	// Primera inicialización de la impresora
 	while(prn_init()!=ERR_OK){
 		printf("ERROR: main printer_init\n");
@@ -223,27 +235,31 @@ void * printer_handler(void * args)
 	while(!thread_kill){
 
 		printer_status = 0xFF; //init
+		printf("prn_get_status\n");
 		printer_status=prn_get_status();
+		printf("prn_status:%d\n",printer_status);
 		//recibir de la queue
 		if((printer_status==ERR_OK)&&(msg_queue_rx=msgrcv(msqid, &msg, size,HOST2PRINTER_PRINTER_REQ ,IPC_NOWAIT))>0){
 
 			printf("Rx printer Request: %s \n",msg.info.mfile_name);
 			//envío a la printer
 			memset(&msg,0, sizeof(msg));
-		}else if((printer_status==ERR_PRN_ERROR_R)||(printer_status=ERR_PRN_CUTTER)){
+		}else if((printer_status==ERR_PRN_ERROR_R)||(printer_status==ERR_PRN_CUTTER)){
 			// reset de printer
+			printf("Reset de printer - prn_status:%d\n",printer_status);
 			if(prn_reset()!=ERR_OK)
 				printer_status=ERR_PRN_OFFLINE;
 
 		}
 
-		if((printer_status==ERR_PRN_PLUG)||(printer_status=ERR_PRN_OFFLINE)){
+		if((printer_status==ERR_PRN_PLUG)||(printer_status==ERR_PRN_OFFLINE)||!printer_init){
+			printf("Perdida de printer - prn_status:%d\n",printer_status);
 			while(prn_reinit()!=ERR_OK){
-			sleep(2);
-			printf("Perdida de printer");
+				sleep(2);
 			}
 		}
-		usleep(THREAD_WAIT);
+		sleep(THREAD_WAIT);
+		printf("printer thread end loop\n");
 	}
 	// Eliminamos la queue
 	msgctl(msqid, IPC_RMID, NULL);

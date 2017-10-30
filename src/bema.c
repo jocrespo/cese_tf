@@ -9,28 +9,29 @@
 
 
 
-
-
-
-
-
 /**
 	Initializes printer
 	@return
 	int16_t: <0 if error initializing, 0 otherwise
 */
 int16_t prn_init(void){
-	int16_t ret;
+	int16_t ret=-1;
+	printf("prn_init\n");
 	ret=usb_comm_init();
 	if(ret){
 		printf("ERROR: usb_init: %d\n",ret);
 		ret=-1;
 	}else if(prn_operation_mode(1)<0){ // Modo ESC/POS
 		printf("ERROR: prn_op_mode\n");
-		ret=2;
+		ret=-2;
+	}else if(prn_asb_mode()<0){ 
+		printf("ERROR: prn_asb_mode\n");
+		ret=-3;
 	}else{
+		printf("prn_init ok\n");
 		memset(&bema_status,0,sizeof(bema_status));
 		bema_status.not_plugged= 1;
+		printer_init = 1;
 	}
 	return ret;
 }
@@ -42,6 +43,7 @@ int16_t prn_init(void){
 	int16_t: 0 OK !=0 error
 */
 int16_t prn_reinit(void){
+	printer_init = 0;
 	return usb_comm_reinit();
 }
 
@@ -56,31 +58,33 @@ int16_t prn_get_status(void){
 	int16_t status_refreshed = 0;
 	//Si ha pasado mas de PRN_STATUS_REFRESH_TIME segundos hay que actualizar
 	if(now>(bema_status.time_status_change+PRN_STATUS_REFRESH_TIME))
-		status_refreshed=prn_status_refresh(); //ignoro el retorno, no me molesta
+		status_refreshed=prn_status_refresh(); 		
 
-	// Hay prioridad en los errores.De arriba hacia abajo, autoexcluyentes
-	if(bema_status.not_plugged){
-		ret=ERR_PRN_PLUG;
-	}else if(bema_status.offline){
+	if(status_refreshed!=0){ // No se ha podido actualizar el status
 		ret=ERR_PRN_OFFLINE;
-	}else if(bema_status.prn_opened){
-		ret=ERR_PRN_COVER;
-	}else if(bema_status.no_paper){
-		ret=ERR_PRN_NO_PAPER;
-	}else if(bema_status.error_cutter){
-		ret=ERR_PRN_CUTTER;
-	}else if(bema_status.error_ur){
-		ret=ERR_PRN_ERROR_UR;
-	}else if(bema_status.error_r){
-		ret=ERR_PRN_ERROR_R;
-	}else if(bema_status.busy){ 
-		ret=ERR_PRN_BUSY;
-	}else
-		ret=ERR_OK;		
-
-	if(status_refreshed!=0) // No se ha podido actualizar el status
-		ret=ERR_PRN_OFFLINE;
-
+		printf("prn_get_status not refreshed\n");
+	}else{
+		// Hay prioridad en los errores.De arriba hacia abajo, autoexcluyentes
+		if(bema_status.not_plugged){
+			ret=ERR_PRN_PLUG;
+		}else if(bema_status.offline){
+			ret=ERR_PRN_OFFLINE;
+		}else if(bema_status.prn_opened){
+			ret=ERR_PRN_COVER;
+		}else if(bema_status.no_paper){
+			ret=ERR_PRN_NO_PAPER;
+		}else if(bema_status.error_cutter){
+			ret=ERR_PRN_CUTTER;
+		}else if(bema_status.error_ur){
+			ret=ERR_PRN_ERROR_UR;
+		}else if(bema_status.error_r){
+			ret=ERR_PRN_ERROR_R;
+		}else if(bema_status.busy){ 
+			ret=ERR_PRN_BUSY;
+		}else
+			ret=ERR_OK;
+	}
+	printf("prn_get_status ret:%d\n",ret);
 	return ret;
 }
 
@@ -131,35 +135,48 @@ int16_t prn_asb_mode(){
 */
 int16_t prn_status_refresh(void){
 	uint16_t ret=0;
-	unsigned char rx_buffer[8];
+	uint16_t intentos=3;
+	unsigned char rx_buffer[20];
+	printf("prn_status_refresh\n");
 	if(prn_data_send(PRN_CMD_EXT_STATUS,sizeof(PRN_CMD_EXT_STATUS))<0){
 		ret=-1;
+		printf("prn_status_refresh error sending\n");
 	}else{
-		usleep(300000); // tiempo de seguridad
-		if(prn_data_receive(rx_buffer,PRN_CMD_EXT_STATUS_RESP_SIZE)<0){
-			ret=-2;
-		}else{ // We got the data
-			if ((rx_buffer[0] & 0x03) || !(rx_buffer[0] & 0x80)
-		   || (rx_buffer[1] & 0x08) || !(rx_buffer[1] & 0x01)
-		   || (rx_buffer[2] & 0x03) || !(rx_buffer[2] & 0x90)
-		   || (rx_buffer[3] & 0x2a) || !(rx_buffer[3] & 0x91)
-			 ||!(rx_buffer[4] & 0x80))
-			{
-				ret=-3; //incorrect data
-			}else{
-				// Refresh status
-				bema_status.offline= rx_buffer[0]&0x08?1:0;
-				bema_status.busy= rx_buffer[0]&0x10?0:1;
-				bema_status.prn_opened= rx_buffer[1]&0x80?1:0;
-				bema_status.no_paper= ((rx_buffer[1]&0x20)||(rx_buffer[1]&0x06))?1:0;
-				bema_status.error_r= rx_buffer[2]&0x40?1:0;
-				bema_status.error_ur= rx_buffer[2]&0x20?1:0;
-				bema_status.error_cutter= rx_buffer[2]&0x08?1:0;
-				bema_status.time_status_change= time(NULL);
-				ret=ERR_OK;
+		do{
+			usleep(1000000); // tiempo de seguridad
+			if(prn_data_receive(rx_buffer,PRN_CMD_EXT_STATUS_RESP_SIZE)<0){
+				ret=-2;
+				printf("prn_status_refresh error receiving\n");
+			}else{ // We got the data
+				if ((rx_buffer[0] & 0x03) || !(rx_buffer[0] & 0x80)
+			   || (rx_buffer[1] & 0x08) || !(rx_buffer[1] & 0x01)
+			   || (rx_buffer[2] & 0x03) || !(rx_buffer[2] & 0x90)
+			   || (rx_buffer[3] & 0x2a) || !(rx_buffer[3] & 0x91)
+				 ||(rx_buffer[4] & 0x80))
+				{
+					printf("prn_status_refresh error incorrect data\n");
+					ret=-3; //incorrect data
+				}else{
+					printf("prn_status_refresh got data: %02x %02x %02x %02x %02x \n",
+					rx_buffer[0],rx_buffer[1],rx_buffer[2],rx_buffer[3],rx_buffer[4]);
+					// Refresh status
+					bema_status.offline= rx_buffer[0]&0x04?1:0;
+					//bema_status.busy= rx_buffer[0]&0x10?0:1;
+					bema_status.busy= 0;
+					bema_status.prn_opened= rx_buffer[1]&0x80?0:1;
+					bema_status.no_paper= ((rx_buffer[1]&0x20)||(rx_buffer[1]&0x06))?1:0;
+					bema_status.error_r= rx_buffer[2]&0x40?1:0;
+					bema_status.error_ur= rx_buffer[2]&0x20?1:0;
+					bema_status.error_cutter= rx_buffer[2]&0x08?1:0;
+					bema_status.time_status_change= time(NULL);
+					bema_status.not_plugged=0;
+					ret=ERR_OK;
+					break;
+				}
 			}
-		}
+		}while(intentos--);
 	}	
+	printf("prn_status_refresh ret:%d\n",ret);
 	return ret;
 }
 
@@ -173,14 +190,17 @@ int16_t prn_status_refresh(void){
 	
 */
 int32_t prn_data_send(unsigned char *data ,uint16_t size){
-	uint16_t ret=-1;
+	uint32_t ret=-1;
 	ret=usb_comm_send(data,size);
 	if(ret<0){ // no hay comunicacion
+		printf("prn_data_send offline\n");
 		bema_status.offline=1;
 	}else if(ret==size){
 		ret=ERR_OK;
-	}else // comunicacione incompleta
+	}else{ // comunicacion incompleta
+		printf("prn_data_send incompleta:%d de %d\n",ret,size);
 		ret=-1;
+	}
 	return ret;
 }
 
@@ -195,15 +215,19 @@ int32_t prn_data_send(unsigned char *data ,uint16_t size){
 
 */
 int32_t prn_data_receive(unsigned char *data ,uint16_t size){
-	uint16_t ret;
+	int32_t ret;
 	ret=usb_comm_receive(data,size);
+	printf("prn_data_receive size:%d ret:%d\n",size,ret);
 	if(ret<0){ // no hay comunicacion
+		printf("prn_data_receive offline\n");
 		bema_status.offline=1;
 	}else if(ret==size){
 		ret=ERR_OK;
-	}else // comunicacion incompleta
+	}else{ // comunicacion incompleta
+		printf("prn_data_receive incompleta:%d de %d\n",ret,size);
 		ret=-1;
-	return ret==size? 0:-1;
+	}
+	return ret;
 }
 
 /**

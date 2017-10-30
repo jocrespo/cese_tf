@@ -3,8 +3,11 @@
 
 #include <libusb-1.0/libusb.h>
 
-#define USB_READ_TOUT 10
-#define USB_WRITE_TOUT 1000
+#define USB_READ_TOUT 100
+#define USB_WRITE_TOUT 10000
+
+#define ACM_CTRL_DTR 0x01
+#define ACM_CTRL_RTS 0x02
 
 int32_t usb_comm_send(unsigned char *data2tx ,uint16_t size);
 int32_t usb_comm_receive(unsigned char *data2rx ,uint16_t size);
@@ -25,7 +28,7 @@ typedef struct {
 } usb_prn_st;
 
 usb_prn_st prn;
-static libusb_context *usb_context;
+libusb_context *usb_context;
 libusb_device_handle *usb_handle;
 int interfaces; // interfaces del device
 
