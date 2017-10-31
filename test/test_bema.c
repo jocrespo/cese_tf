@@ -11,6 +11,7 @@
 #include "unity.h"
 #include "bema.h"
 #include "error.h"
+#include "usb_comm.h"
 
 #include "mock_usb_comm.h"
 
