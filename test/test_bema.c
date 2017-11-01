@@ -110,7 +110,7 @@ void test_prn_data_send_devuelve_valores_correctos(){
 
 	memset(&bema_status,0,sizeof(bema_status));
 	// comunicacion parcial
-	usb_comm_send_IgnoreAndReturn(-1);
+	usb_comm_send_IgnoreAndReturn(sizeof(data_to_send)-1);
 	ret= prn_data_send(data_to_send,sizeof(data_to_send));
 	TEST_ASSERT_EQUAL_INT32 (ret, -1);
 
@@ -137,7 +137,7 @@ void test_prn_data_receive_devuelve_valores_correctos(){
 
 	memset(&bema_status,0,sizeof(bema_status));
 	// comunicacion parcial
-	usb_comm_send_IgnoreAndReturn(-1);
+	usb_comm_send_IgnoreAndReturn(sizeof(data_to_receive)-1);
 	ret= prn_data_receive(data_to_receive,sizeof(data_to_receive));
 	TEST_ASSERT_EQUAL_INT32 (ret, -1);
 
