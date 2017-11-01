@@ -198,11 +198,11 @@ int16_t prn_status_refresh(void){
 	uchar *data: data to send
 	uint16_t size: length of data
 	@return
-	int16_t: -1 if error, 0 otherwise 
+	int16_t: <0 if error, 0 otherwise
 	
 */
 int32_t prn_data_send(unsigned char *data ,uint16_t size){
-	uint32_t ret;
+	int32_t ret;
 	ret=usb_comm_send(data,size);
 	if(ret<0){ // no hay comunicacion
 		printf("prn_data_send offline\n");
