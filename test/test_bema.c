@@ -131,14 +131,14 @@ void test_prn_data_receive_devuelve_valores_correctos(){
 	TEST_ASSERT_EQUAL_INT32 (ret, ERR_OK);
 
 	// impresora desconectada
-	usb_comm_send_IgnoreAndReturn(-2);
+	usb_comm_receive_IgnoreAndReturn(-2);
 	ret= prn_data_receive(data_to_receive,sizeof(data_to_receive));
 	TEST_ASSERT_EQUAL_INT32 (ret, -2);
 	TEST_ASSERT_EQUAL_UINT8 (bema_status.offline,1);
 
 	memset(&bema_status,0,sizeof(bema_status));
 	// comunicacion parcial
-	usb_comm_send_IgnoreAndReturn(sizeof(data_to_receive)-1);
+	usb_comm_receive_IgnoreAndReturn(sizeof(data_to_receive)-1);
 	ret= prn_data_receive(data_to_receive,sizeof(data_to_receive));
 	TEST_ASSERT_EQUAL_INT32 (ret, -1);
 
