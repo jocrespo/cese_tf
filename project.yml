@@ -13,9 +13,9 @@
  # :release_build: TRUE
   :test_file_prefix: test_
 
-:release_build:
-  :output: MyApp.out
-  :use_assembly: FALSE
+#:release_build:
+ # :output: MyApp.out
+ # :use_assembly: FALSE
 
 :environment:
 
@@ -60,6 +60,7 @@
   :includes:
     - bema.h
     - usb_comm.h
+    - error.h
 
 :flags:
   :test:

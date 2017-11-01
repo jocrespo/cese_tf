@@ -244,6 +244,7 @@ void * printer_handler(void * args)
 			printf("Rx printer Request: %s \n",msg.info.mfile_name);
 			//envío a la printer
 			memset(&msg,0, sizeof(msg));
+			prn_print(msg.info.mfile_name);
 		}else if((printer_status==ERR_PRN_ERROR_R)||(printer_status==ERR_PRN_CUTTER)){
 			// reset de printer
 			printf("Reset de printer - prn_status:%d\n",printer_status);

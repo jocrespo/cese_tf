@@ -103,7 +103,6 @@ int16_t prn_operation_mode(uint8_t mode){
 	int16_t ret;
 	char comando[4];
 	if(mode==0 || mode==1){
-		static unsigned char PRN_OP_MODE[]={0x1d,0xf9,0x35};
 		memcpy(comando,PRN_OP_MODE,sizeof(PRN_OP_MODE));
 		comando[3]=mode;
 		ret=prn_data_send(PRN_OP_MODE,sizeof(PRN_OP_MODE));
@@ -127,6 +126,18 @@ int16_t prn_asb_mode(){
 }
 
 /**
+	Pide un status a la printer en formato extendido
+	@return
+	int16_t: -1 if error, 0 otherwise
+
+*/
+int16_t prn_status_request(){
+	int16_t ret;
+	ret=prn_data_send(PRN_CMD_EXT_STATUS,sizeof(PRN_CMD_EXT_STATUS));
+	return ret;
+}
+
+/**
 	Refresh status
 	@return
 	bool: 	0: OK
@@ -139,7 +150,7 @@ int16_t prn_status_refresh(void){
 	uint16_t intentos=3;
 	unsigned char rx_buffer[20];
 	printf("prn_status_refresh\n");
-	if(prn_data_send(PRN_CMD_EXT_STATUS,sizeof(PRN_CMD_EXT_STATUS))<0){
+	if(prn_status_request()<0){
 		ret=-1;
 		printf("prn_status_refresh error sending\n");
 	}else{
@@ -232,12 +243,12 @@ int32_t prn_data_receive(unsigned char *data ,uint16_t size){
 }
 
 /**
-	Receive data from printer
+	Imprime en formato 24 bits
 	@params
 	uchar *data2print: buffer data to print
 	uint16_t length: length of data to print
 	@return
-	int16_t: -1 if error, 0 otherwise ¿?
+	int16_t: -1 if error, 0 otherwise
 
 */
 int16_t prn_print_24bits(unsigned char *data2print, uint16_t length){
@@ -279,30 +290,64 @@ int16_t prn_reset(){
 }
 
 /**
- *
- *
- */
-int16_t prn_print(unsigned char *data2print, uint16_t length){
+	Imprime el archivo en la ruta pasada por parametro
+	@params
+	unsigned char *file: file to print
+	@return
+	int16_t: -1 if error, 0 otherwise
+
+*/
+int16_t prn_print(unsigned char *file){
+	int16_t ret;
+
+	return ret;
+
+}
+/**
+	Imprime en formato raster de bits
+	@params
+	uchar *data2print: buffer data to print
+	uint16_t length: length of data to print
+	@return
+	int16_t: -1 if error, 0 otherwise
+*/
+int16_t prn_print_raster(unsigned char *data2print, uint16_t length){
 	int16_t ret;
 	int16_t err = ERR_OK;
 	int16_t i;
 	uint16_t size2send = 0;
 	unsigned char data2send[1800]; // espacio de sobra para el comando, los datos(1728), y el line feed
 
-	//Envío los comandos necsesarios para que vaya imprimiendo la totalidad de datos requeridos
-	for (i= 0; ERR_OK == err && i < length; i+= 24 * PRN_LINEA_SZ) {
-		memcpy(data2send,PRN_24BITS_GRAPHICS_PRINT,sizeof(PRN_24BITS_GRAPHICS_PRINT)); // comando
-		size2send+=sizeof(PRN_24BITS_GRAPHICS_PRINT);
-		memcpy(data2send+size2send,data2print + i, 24 * PRN_LINEA_SZ);
-		size2send+=24 * PRN_LINEA_SZ; // datos del comando
-		memcpy(data2send+size2send,PRN_CMD_LINE_FEED,sizeof(PRN_CMD_LINE_FEED));
-		size2send+=sizeof(PRN_CMD_LINE_FEED);
-		if (!prn_data_send(data2send,size2send)) {
-			bema_status.error_r = 1;
-		   err= ERR_PRN_ERROR_R;
-		}
-		memset(data2send,0,sizeof(data2send)); // Limpieza de buffer
-	}
+
+    prn_cmd_raster_head_t
+    header = {.cmd = PRN_CMD_RASTER,
+        .m = 0,
+        .xL = (unsigned char)(PRN_LINEA_SZ % 256),
+        .xH = (unsigned char)(PRN_LINEA_SZ / 256),
+        .yL = (unsigned char)(lines % 256),
+        .yH = (unsigned char)(lines / 256)};
+
+    ssize_t salto= 50; // imprimimos el grafico en mensajes de 200 lineas maximo para tener granularidad en el proceso de impresion
+
+    for (size_t i= 0; err == ERR_OK && (i < lines); i+= salto) {
+        if((i + salto) > lines) //ultima iteracion
+            salto= lines - i;
+
+        if( (err= status()) != ERR_OK)
+            break;
+
+        header.yL=(uchar)((salto) % 256);
+        header.yH=(uchar)((salto) / 256);
+        //debugf2(BT_ERROR,"Epson flush: %d of %d",i,lines);
+        if ( (tmp_err= write((const uchar *) &header, sizeof(header))) < (int)sizeof(header)){
+            debugf2(BT_ERROR, "Epson error writing header:%d of %d", tmp_err, sizeof(header));
+            err= ERR_PRN_ERROR_R;
+        }
+        else if ( (tmp_err= write(buffer->buf_data() + i*line_sz, salto*line_sz)) < (ssize_t) (salto * line_sz)) {
+            debugf2(BT_ERROR, "Epson error writing data:%d of %d",tmp_err,sizeof(salto*line_sz));
+            err= ERR_PRN_ERROR_R;
+        }
+    }
 	return err;
 }
 

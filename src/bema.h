@@ -31,11 +31,22 @@ static unsigned char PRN_ASB[]={ 0x1d, 0x61, 0xff };
 // Reset de printer
 static unsigned char PRN_RESET[]={ 0x1d, 0xF8, 0x76 };
 
-// comando de impresion en formato raster
-static unsigned char PRN_RASTER_PRINT[]={0x1d,0x76,0x30,0x30};
+// Modo de operacion de la printer: comandos Bema o Esc/pos
+static unsigned char PRN_OP_MODE[]={0x1d,0xf9,0x35};
 
 // comando de impresion en formato de 24 bits
 static unsigned char PRN_24BITS_GRAPHICS_PRINT[]={0x1b,0x2a,0x21,0x40,0x02};
+
+// comando de impresion en formato raster
+static unsigned char PRN_RASTER_PRINT[]={0x1d,0x76,0x30,0x30};
+typedef struct{
+    uchar cmd[3];
+    uchar m;
+    uchar xL;
+    uchar xH;
+    uchar yL;
+    uchar yH;
+}prn_cmd_raster_head_t;
 
 // Estado de la impresora USB. Errores, activos con 1 
 struct prn_status {

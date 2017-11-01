@@ -75,7 +75,7 @@ void test_prn_get_status_devuelve_el_error_correcto(){
  */
 void test_prn_operation_mode_parametro_correcto(){
 	int16_t ret;
-	usb_comm_send_ExpectAnyArgsAndReturn(1);
+	usb_comm_send_IgnoreAndReturn(4);
 
 	ret= prn_operation_mode(0);
 	TEST_ASSERT_EQUAL_INT16 (ret, ERR_OK);
