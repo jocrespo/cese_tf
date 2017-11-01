@@ -105,7 +105,7 @@ int16_t prn_operation_mode(uint8_t mode){
 	if(mode==0 || mode==1){
 		memcpy(comando,PRN_OP_MODE,sizeof(PRN_OP_MODE));
 		comando[3]=mode;
-		ret=prn_data_send(PRN_OP_MODE,sizeof(PRN_OP_MODE));
+		ret=prn_data_send(comando,sizeof(comando));
 	}
 	else 
 		ret=ERR_PRN_DATA; // incorrect data
