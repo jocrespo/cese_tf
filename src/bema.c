@@ -27,6 +27,9 @@ int16_t prn_init(void){
 	}else if(prn_asb_mode()<0){ 
 		printf("ERROR: prn_asb_mode\n");
 		ret=-3;
+	}else if(prn_intensity_print()<0){
+		printf("ERROR: prn_intensity_print\n");
+		ret=-4;
 	}else{
 		printf("prn_init ok\n");
 		memset(&bema_status,0,sizeof(bema_status));
@@ -113,7 +116,7 @@ int16_t prn_operation_mode(uint8_t mode){
 }
 
 /**
-	Set Bematech printer for automatic error response.We get all possible warnings
+	Unset Bematech printer for automatic error response.
 	@return
 	int16_t: -1 if error, 0 otherwise
 	
@@ -122,6 +125,18 @@ int16_t prn_asb_mode(){
 	int16_t ret;
 		
 	ret=prn_data_send(PRN_ASB,sizeof(PRN_ASB));
+	return ret;
+}
+
+/**
+	Set Bematech printer for maximum printing intensity
+	@return
+	int16_t: -1 if error, 0 otherwise
+
+*/
+int16_t prn_intensity_print(){
+	int16_t ret;
+	ret=prn_data_send(PRN_INTENS_4,sizeof(PRN_INTENS_4));
 	return ret;
 }
 
@@ -294,12 +309,32 @@ int16_t prn_reset(){
 	@params
 	unsigned char *file: file to print
 	@return
-	int16_t: -1 if error, 0 otherwise
+	int16_t: <0 if error, 0 otherwise
 
 */
 int16_t prn_print(unsigned char *file){
-	int16_t ret;
+	int16_t ret=ERR_OK;
+	int16_t readBytes=1; // init
+	unsigned char data2print[PRN_LINEA_SZ*1000]; // buffer a enviar a imprimir
+    FILE *fp;
+    fp=fopen(file, "r");
+    if(fp==NULL){
+    	ret=-1;
+    }else{
+    	while((ret==ERR_OK)&&(readBytes>0)){
+    		// Lectura
+    		readBytes=fread(data2print, sizeof(data2print[0]), sizeof(data2print), fp);
 
+    		if(readBytes==0) // Fin de archivo
+    			break;
+    		// Envio a impresion
+    		if((readBytes<0) || (prn_print_raster(data2print,readBytes)<0)){
+    			ret=-2;
+    		}
+    		memset(data2print,0,sizeof(data2print));
+    	}
+    	fclose(fp);
+    }
 	return ret;
 
 }
@@ -312,73 +347,38 @@ int16_t prn_print(unsigned char *file){
 	int16_t: -1 if error, 0 otherwise
 */
 int16_t prn_print_raster(unsigned char *data2print, uint16_t length){
-	int16_t ret;
-	int16_t err = ERR_OK;
+	int16_t ret=ERR_OK;
 	int16_t i;
-	uint16_t size2send = 0;
-	unsigned char data2send[1800]; // espacio de sobra para el comando, los datos(1728), y el line feed
+	uint16_t lineas;
+	uint8_t salto;
 
-/*
-    prn_cmd_raster_head_t
-    header = {.cmd = PRN_RASTER_PRINT,
-        .m = 0,
+    // Calculo de lineas en funcion de la cantidad de datos
+	lineas=length/PRN_LINEA_SZ;
+	if(length%PRN_LINEA_SZ)
+		lineas ++;
+
+    prn_cmd_raster_head_t header = {
+    	.cmd = PRN_RASTER_PRINT,
         .xL = (unsigned char)(PRN_LINEA_SZ % 256),
-        .xH = (unsigned char)(PRN_LINEA_SZ / 256),
-        .yL = (unsigned char)(lines % 256),
-        .yH = (unsigned char)(lines / 256)};
+        .xH = (unsigned char)(PRN_LINEA_SZ / 256)
+    };
+    salto= 50; // imprimimos el grafico en mensajes de 50 lineas
 
-    ssize_t salto= 50; // imprimimos el grafico en mensajes de 200 lineas maximo para tener granularidad en el proceso de impresion
+    for (i= 0; ret == ERR_OK && (i < lineas); i+= salto) {
+        if((i + salto) > lineas) //ultima iteracion
+            salto= lineas - i;
 
-    for (size_t i= 0; err == ERR_OK && (i < lines); i+= salto) {
-        if((i + salto) > lines) //ultima iteracion
-            salto= lines - i;
+        header.yL=(unsigned char)((salto) % 256);
+        header.yH=(unsigned char)((salto) / 256);
 
-        if( (err= status()) != ERR_OK)
-            break;
-
-        header.yL=(uchar)((salto) % 256);
-        header.yH=(uchar)((salto) / 256);
-        //debugf2(BT_ERROR,"Epson flush: %d of %d",i,lines);
-        if ( (tmp_err= write((const uchar *) &header, sizeof(header))) < (int)sizeof(header)){
-
-            err= ERR_PRN_ERROR_R;
+        // Se envia primero el header
+        if (prn_data_send((unsigned char *) &header, sizeof(header)) < 0){
+            ret= ERR_PRN_ERROR_R;
+        }// Se envia despues los datos
+        else if ( prn_data_send(data2print+i*PRN_LINEA_SZ ,salto*PRN_LINEA_SZ)< 0) {
+            ret= ERR_PRN_ERROR_R;
         }
-        else if ( (tmp_err= write(buffer->buf_data() + i*line_sz, salto*line_sz)) < (ssize_t) (salto * line_sz)) {
-
-            err= ERR_PRN_ERROR_R;
-        }
-    }*/
-	return err;
-}
-
-/**
-	Transforma el archivo a imprimir al formato de 24bits de la printer
-	@params
-	FILE *data2print: buffer data to print
-	uint16_t length: length of data to print
-	@return
-	int16_t: -1 if error, 0 otherwise ¿?
-
-*/
-int16_t prn_fill_prebuf_24bits(FILE *data2print, unsigned char *buffer_printer, uint16_t *size){
-	int16_t ret;
-
+    }
 	return ret;
-}
-
-/**
-	Llena el buffer de la printer para la futura impresion
-	@params
-	uchar *data2print: buffer data to print
-	uint16_t length: length of data to print
-	@return
-	int16_t: -1 if error, 0 otherwise ¿?
-
-*/
-int16_t prn_fill_buffer(unsigned char *data2print, uint16_t length){
-	int16_t ret;
-
-	return ret;
-	
 }
 

@@ -10,10 +10,9 @@
 #define PRN_LINEA_SZ 72
 #define PRN_STATUS_REFRESH_TIME 2
 
-#define LINES_QTY_CLEAR 910
-
-#define SETABIT(c, ofs) (((uchar*)(c))[(ofs)>>3] |= 1     <<(7-((ofs)&7)))
-#define BOOLABIT(c, ofs) (   ((uchar*)(c))[(ofs)>>3] & (1<<(7-((ofs)&7))) )
+// Intensidad de la impresion.
+static unsigned char PRN_INTENS_4[]=
+    { 0x1D, 0xF9, 0x2B, 0x04 };
 
 // Line feed
 static unsigned char PRN_CMD_LINE_FEED[]={ 0x1B, 0x4A, 0x30 };
@@ -25,8 +24,8 @@ static unsigned char PRN_CMD_CUTTER[]=
 // Estado extendido, necesario para el flag de busy
 static unsigned char PRN_CMD_EXT_STATUS[]={ 0x1D, 0xF8, 0x31 };
 
-// Envio automatico de cambios en estatus. 
-static unsigned char PRN_ASB[]={ 0x1d, 0x61, 0xff };
+// Envio automatico de cambios en estatus deshabilitado
+static unsigned char PRN_ASB[]={ 0x1d, 0x61, 0x00};
 
 // Reset de printer
 static unsigned char PRN_RESET[]={ 0x1d, 0xF8, 0x76 };
@@ -40,8 +39,7 @@ static unsigned char PRN_24BITS_GRAPHICS_PRINT[]={0x1b,0x2a,0x21,0x40,0x02};
 // comando de impresion en formato raster
 static unsigned char PRN_RASTER_PRINT[]={0x1d,0x76,0x30,0x30};
 typedef struct{
-	unsigned char cmd[3];
-	unsigned char m;
+	unsigned char cmd[4];
 	unsigned char xL;
 	unsigned char xH;
 	unsigned char yL;
@@ -61,24 +59,16 @@ struct prn_status {
     uint8_t busy :1; // Printer ocupada
 }bema_status;
 
-struct print_buffer{
-	unsigned char data [100*24*PRN_LINEA_SZ]; //size buffer de Bematech multiplo de 24
-	uint16_t in_bytes; // bytes en el buffer
-}buffer;
-
-struct print_prebuffer{
-	unsigned char data [24*PRN_LINEA_SZ]; //size buffer de Bematech multiplo de 24
-	uint16_t lines; // bytes en el buffer
-}prebuffer;
-
 uint8_t printer_init; //flag de inicializacion de la printer
 
 int16_t prn_init(void);
 int16_t prn_reinit(void);
 int16_t prn_get_status(void);
 int16_t prn_reset(void);
+int16_t prn_print(unsigned char *file);
 int16_t prn_operation_mode(uint8_t );
-int16_t prn_asb_mode();
+int16_t prn_asb_mode(void);
+int16_t prn_intensity_print(void);
 int16_t prn_status_refresh(void);
 int32_t prn_data_send(unsigned char *data ,uint16_t size);
 int32_t prn_data_receive(unsigned char *data ,uint16_t size);
