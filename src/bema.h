@@ -66,6 +66,7 @@ int16_t prn_reinit(void);
 int16_t prn_get_status(void);
 int16_t prn_reset(void);
 int16_t prn_print(unsigned char *file);
+int16_t prn_print_raster(unsigned char *data2print, uint16_t length);
 int16_t prn_operation_mode(uint8_t );
 int16_t prn_asb_mode(void);
 int16_t prn_intensity_print(void);
