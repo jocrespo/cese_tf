@@ -202,7 +202,7 @@ int16_t prn_status_refresh(void){
 	
 */
 int32_t prn_data_send(unsigned char *data ,uint16_t size){
-	uint32_t ret=-1;
+	uint32_t ret;
 	ret=usb_comm_send(data,size);
 	if(ret<0){ // no hay comunicacion
 		printf("prn_data_send offline\n");

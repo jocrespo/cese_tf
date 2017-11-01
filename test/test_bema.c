@@ -71,7 +71,7 @@ void test_prn_get_status_devuelve_el_error_correcto(){
 }
 
 /**
- * Se comprueba que la funcion operation_mode recibe los parametros correctos o no. Y se chequea el valor de retorno
+ * Se comprueba que la funcion prn_operation_mode recibe los parametros correctos o no. Y se chequea el valor de retorno
  */
 void test_prn_operation_mode_parametro_correcto(){
 	int16_t ret;
@@ -86,5 +86,59 @@ void test_prn_operation_mode_parametro_correcto(){
 	// valor incorrecto
 	ret= prn_operation_mode(6);
 	TEST_ASSERT_EQUAL_INT16 (ret, ERR_PRN_DATA);
+
+}
+
+/**
+ * Se comprueba que la funcion prn_data_send devuelve el valor de retorno esperado
+ */
+void test_prn_data_send_devuelve_valores_correctos(){
+	int32_t ret;
+	memset(&bema_status,0,sizeof(bema_status));
+	unsigned char data_to_send[5]={0};
+
+	// Sin errores
+	usb_comm_send_IgnoreAndReturn(sizeof(data_to_send));
+	ret= prn_data_send(data_to_send,sizeof(data_to_send));
+	TEST_ASSERT_EQUAL_INT32 (ret, ERR_OK);
+
+	// impresora desconectada
+	usb_comm_send_IgnoreAndReturn(-2);
+	ret= prn_data_send(data_to_send,sizeof(data_to_send));
+	TEST_ASSERT_EQUAL_INT32 (ret, -2);
+	TEST_ASSERT_EQUAL_UINT8 (bema_status.offline,1);
+
+	memset(&bema_status,0,sizeof(bema_status));
+	// comunicacion parcial
+	usb_comm_send_IgnoreAndReturn(-1);
+	ret= prn_data_send(data_to_send,sizeof(data_to_send));
+	TEST_ASSERT_EQUAL_INT32 (ret, -1);
+
+}
+
+/**
+ * Se comprueba que la funcion prn_data_receive devuelve el valor de retorno esperado
+ */
+void test_prn_data_receive_devuelve_valores_correctos(){
+	int32_t ret;
+	memset(&bema_status,0,sizeof(bema_status));
+	unsigned char data_to_receive[5]={0};
+
+	// Sin errores
+	usb_comm_receive_IgnoreAndReturn(sizeof(data_to_receive));
+	ret= prn_data_receive(data_to_receive,sizeof(data_to_receive));
+	TEST_ASSERT_EQUAL_INT32 (ret, ERR_OK);
+
+	// impresora desconectada
+	usb_comm_send_IgnoreAndReturn(-2);
+	ret= prn_data_receive(data_to_receive,sizeof(data_to_receive));
+	TEST_ASSERT_EQUAL_INT32 (ret, -2);
+	TEST_ASSERT_EQUAL_UINT8 (bema_status.offline,1);
+
+	memset(&bema_status,0,sizeof(bema_status));
+	// comunicacion parcial
+	usb_comm_send_IgnoreAndReturn(-1);
+	ret= prn_data_receive(data_to_receive,sizeof(data_to_receive));
+	TEST_ASSERT_EQUAL_INT32 (ret, -1);
 
 }
