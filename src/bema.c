@@ -318,9 +318,9 @@ int16_t prn_print_raster(unsigned char *data2print, uint16_t length){
 	uint16_t size2send = 0;
 	unsigned char data2send[1800]; // espacio de sobra para el comando, los datos(1728), y el line feed
 
-
+/*
     prn_cmd_raster_head_t
-    header = {.cmd = PRN_CMD_RASTER,
+    header = {.cmd = PRN_RASTER_PRINT,
         .m = 0,
         .xL = (unsigned char)(PRN_LINEA_SZ % 256),
         .xH = (unsigned char)(PRN_LINEA_SZ / 256),
@@ -340,14 +340,14 @@ int16_t prn_print_raster(unsigned char *data2print, uint16_t length){
         header.yH=(uchar)((salto) / 256);
         //debugf2(BT_ERROR,"Epson flush: %d of %d",i,lines);
         if ( (tmp_err= write((const uchar *) &header, sizeof(header))) < (int)sizeof(header)){
-            debugf2(BT_ERROR, "Epson error writing header:%d of %d", tmp_err, sizeof(header));
+
             err= ERR_PRN_ERROR_R;
         }
         else if ( (tmp_err= write(buffer->buf_data() + i*line_sz, salto*line_sz)) < (ssize_t) (salto * line_sz)) {
-            debugf2(BT_ERROR, "Epson error writing data:%d of %d",tmp_err,sizeof(salto*line_sz));
+
             err= ERR_PRN_ERROR_R;
         }
-    }
+    }*/
 	return err;
 }
 
@@ -382,17 +382,3 @@ int16_t prn_fill_buffer(unsigned char *data2print, uint16_t length){
 	
 }
 
-/*
-void add(unsigned char *line)
-{
-    uint8_t lines2;
-    uint8_t j;
-    for(lines2=0;lines2<24;lines2++) {
-        for (j= 0; j < PRN_LINEA_SZ * 8; j++)
-            if (BOOLABIT(line, j)){ // (j==0 || j==10) // (j & mask)
-                SETABIT(data + j * 3, lines);
-            }
-
-    }
-}
-*/
