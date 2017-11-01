@@ -30,7 +30,7 @@ void tearDown(){
  */
 void test_prn_get_status_devuelve_el_error_correcto(){
 	int16_t ret;
-
+	printf("test_prn_get_status_devuelve_el_error_correcto \n");
 	ret= prn_get_status();
 	TEST_ASSERT_EQUAL_INT16 (ret, ERR_OK);
 
@@ -75,6 +75,7 @@ void test_prn_get_status_devuelve_el_error_correcto(){
  */
 void test_prn_operation_mode_parametro_correcto(){
 	int16_t ret;
+	printf("test_prn_operation_mode_parametro_correcto \n");
 	usb_comm_send_IgnoreAndReturn(4); // El comando de operacion esta fornado por 4 bytes
 
 	ret= prn_operation_mode(0);
@@ -96,7 +97,7 @@ void test_prn_data_send_devuelve_valores_correctos(){
 	int32_t ret;
 	memset(&bema_status,0,sizeof(bema_status));
 	unsigned char data_to_send[5]={0};
-
+	printf("test_prn_data_send_devuelve_valores_correctos \n");
 	// Sin errores
 	usb_comm_send_IgnoreAndReturn(sizeof(data_to_send));
 	ret= prn_data_send(data_to_send,sizeof(data_to_send));
@@ -110,7 +111,7 @@ void test_prn_data_send_devuelve_valores_correctos(){
 
 	memset(&bema_status,0,sizeof(bema_status));
 	// comunicacion parcial
-	usb_comm_send_IgnoreAndReturn(sizeof(data_to_send)-1);
+	usb_comm_send_IgnoreAndReturn(4);
 	ret= prn_data_send(data_to_send,sizeof(data_to_send));
 	TEST_ASSERT_EQUAL_INT32 (ret, -1);
 
@@ -123,7 +124,7 @@ void test_prn_data_receive_devuelve_valores_correctos(){
 	int32_t ret;
 	memset(&bema_status,0,sizeof(bema_status));
 	unsigned char data_to_receive[5]={0};
-
+	printf("test_prn_data_receive_devuelve_valores_correctos \n");
 	// Sin errores
 	usb_comm_receive_IgnoreAndReturn(sizeof(data_to_receive));
 	ret= prn_data_receive(data_to_receive,sizeof(data_to_receive));
