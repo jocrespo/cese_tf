@@ -121,7 +121,7 @@ int inotify_loop() {
 	errcode_t printer_status = 0xFF; //init
 
 	// Queue
-	struct queue_msgbuf msg;
+	struct msgbuf msg;
 	int size = sizeof(msg.info);
 	msg.mtype=0xFF; // init.
 
@@ -132,14 +132,18 @@ int inotify_loop() {
 	}
 
 	/*Monitorizo el folder /root y detecto cuando se cierra algún archivo tras haber sido escrito.*/
-	wd = inotify_add_watch(fd, "/home/root/", IN_CLOSE_WRITE);
-
+	wd = inotify_add_watch(fd, RUTA_IMPRESION, IN_CLOSE_WRITE);
+	if (wd < 0) {
+		printf("Couldn't add watch inotify: %d",wd);
+	}
 	while (!thread_kill) {
 		length = read(fd, buffer, sizeof(buffer));
 
 		if (length < 0) {
-			printf("read");
+			printf("inotify read error");
 		}
+                else if(length >0)
+			printf("inotify read events:%d",length);
 		i=0;
 		// Recorremos los posibles eventos
 		while (i < length) {
@@ -161,10 +165,13 @@ int inotify_loop() {
 					memset(&msg,0, sizeof(msg));
 					msg.info.mfile_index = files_reg_index;
 					msg.info.mresult = 0xFF;
+                                        msg.mtype=HOST2PRINTER_PRINTER_REQ;
 					memcpy(msg.info.mfile_name,event->name,NAME_LENGTH);
-					if(msgsnd(msqid,&msg,size,IPC_NOWAIT)<0){
+					int m;
+					m=msgsnd(msqid,&msg,size,IPC_NOWAIT);
+					if(m<0){
 						// No se puede enviar, salimos...
-						printf("Cannot send msg to print - file: %s\n", msg.info.mfile_name);
+						printf("Cannot send msg to print %d - file: %s\n",m, msg.info.mfile_name);
 						return -1;
 					}
 
@@ -182,15 +189,18 @@ int inotify_loop() {
 		// Printer termina de imprimir archivo. Si el resultado esta bien se elimina de disco
 		if((msg_queue_rx=msgrcv(msqid, &msg, size, PRINTER2HOST_PRINT_RESULT,IPC_NOWAIT))>0){
 
-			if(msg.info.mresult != ERR_OK)
-				printf("Printer error, file: %s\n", msg.info.mfile_name);
-
+			if(msg.info.mresult != ERR_OK){
+				printf("Main:Printer error, file: %s\n", msg.info.mfile_name);
+			}else{
+				printf("Main:Correct printing - file: %s\n", msg.info.mfile_name);
+			}
 			// Eliminamos del registro en cualquier caso
 			if(msg.info.mfile_index < (MAX_EVENT-1))
 				memset(files_reg[msg.info.mfile_index],0, NAME_LENGTH);
 			memset(&msg,0, sizeof(msg));
 		}
 		sleep(THREAD_WAIT); // 1 segundo de espera entre iteraciones
+		printf("Main: end loop\n");
 
 	}
 	/*removing the directory from the watch list.*/
@@ -205,13 +215,13 @@ void * printer_handler(void * args)
 {
 	
 	int msg_queue_rx;
-
+	unsigned char ruta_absoluta[100]; // ruta de la imagen
 	printf("Inicio printer_handler\n");
 
 	errcode_t printer_status = 0xFF; //init
 
 	// Queue
-	struct queue_msgbuf msg;
+	struct msgbuf msg;
 	int size = sizeof(msg.info);
 	msg.mtype=0xFF; // init.
 
@@ -243,10 +253,12 @@ void * printer_handler(void * args)
 
 			printf("Rx printer Request: %s \n",msg.info.mfile_name);
 			//envío a la printer para impresion
-
-			if(prn_print(msg.info.mfile_name)==ERR_OK){
+			
+    			strcpy(ruta_absoluta,RUTA_IMPRESION);
+    			strcat(ruta_absoluta,msg.info.mfile_name);
+			if(prn_print(ruta_absoluta)==ERR_OK){
 				// eliminamos el archivo
-				if (remove((const char*)msg.info.mfile_name)!= ERR_OK)
+				if (remove((const char*)ruta_absoluta)!= ERR_OK)
 					printf("print_handler Cannot delete file: %s\n", msg.info.mfile_name);
 
 				// avisamos de que se ha impreso correctamente
@@ -256,7 +268,8 @@ void * printer_handler(void * args)
 					// No se puede enviar, avisamos pero no hacemos nada mas.
 					printf("Cannot send msg to print result - file: %s\n", msg.info.mfile_name);
 
-				}
+				}else
+					printf("Print OK\n");
 				memset(&msg,0, sizeof(msg));
 			}else{ // impresion fallida
 				printf("Print failed\n");
