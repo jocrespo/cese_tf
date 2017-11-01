@@ -40,12 +40,12 @@ static unsigned char PRN_24BITS_GRAPHICS_PRINT[]={0x1b,0x2a,0x21,0x40,0x02};
 // comando de impresion en formato raster
 static unsigned char PRN_RASTER_PRINT[]={0x1d,0x76,0x30,0x30};
 typedef struct{
-    uchar cmd[3];
-    uchar m;
-    uchar xL;
-    uchar xH;
-    uchar yL;
-    uchar yH;
+	unsigned char cmd[3];
+	unsigned char m;
+	unsigned char xL;
+	unsigned char xH;
+	unsigned char yL;
+	unsigned char yH;
 }prn_cmd_raster_head_t;
 
 // Estado de la impresora USB. Errores, activos con 1 
