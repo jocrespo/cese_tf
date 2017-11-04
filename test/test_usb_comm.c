@@ -12,7 +12,7 @@
 #include "usb_comm.h"
 #include "error.h"
 
-//#include "mock_libusb.h"
+#include "mock_libusb.h"
 
 void setUp(){
 
