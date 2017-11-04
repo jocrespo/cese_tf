@@ -22,9 +22,11 @@
 :extension:
   :executable: .out
 
+
 :paths:
   :test:
     - +:test/**
+    - +:/usr/include/libusb-1.0/*
     - -:test/support
   :source:
     - src/**
@@ -61,6 +63,7 @@
     - bema.h
     - usb_comm.h
     - error.h
+    - /usr/include/libusb-1.0/*
 
 :flags:
   :test:
