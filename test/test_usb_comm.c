@@ -22,7 +22,7 @@ void setUp(){
 void tearDown(){
 
 }
-
+/*
 void test_usb_comm_send_devuelve_el_error_correcto(){
 	int32_t ret;
 	uint16_t size;
@@ -38,3 +38,4 @@ void test_usb_comm_send_devuelve_el_error_correcto(){
 	ret=usb_comm_send(data,size);
 	TEST_ASSERT_EQUAL_INT32 (ret, 1);
 }
+*/
