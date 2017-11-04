@@ -34,16 +34,16 @@ void test_usb_comm_send_devuelve_el_error_correcto(){
 	// caso ok
 	libusb_bulk_transfer_IgnoreAndReturn(0);
 	ret=usb_comm_send(data,size);
-	TEST_ASSERT_EQUAL_INT32 (ret, size);
+	TEST_ASSERT_EQUAL_INT32 (size,ret);
 
 	// casos nok
 	libusb_bulk_transfer_IgnoreAndReturn(1);
 	ret=usb_comm_send(data,size);
-	TEST_ASSERT_EQUAL_INT32 (ret, 0);
+	TEST_ASSERT_EQUAL_INT32 (0,ret);
 
 	libusb_bulk_transfer_IgnoreAndReturn(-3); // Fallo desde LIBUSB
 	ret=usb_comm_send(data,size);
-	TEST_ASSERT_EQUAL_INT32 (ret, -3);
+	TEST_ASSERT_EQUAL_INT32 (-3,ret);
 }
 
 /**
@@ -57,14 +57,14 @@ void test_usb_comm_receive_devuelve_el_error_correcto(){
 	// caso ok
 	libusb_bulk_transfer_IgnoreAndReturn(0);
 	ret=usb_comm_receive(data,size);
-	TEST_ASSERT_EQUAL_INT32 (ret, size);
+	TEST_ASSERT_EQUAL_INT32 (size,ret);
 
 	// casos nok
 	libusb_bulk_transfer_IgnoreAndReturn(1);
 	ret=usb_comm_receive(data,size);
-	TEST_ASSERT_EQUAL_INT32 (ret, 1);
+	TEST_ASSERT_EQUAL_INT32 (1,ret);
 
 	libusb_bulk_transfer_IgnoreAndReturn(-3);
 	ret=usb_comm_receive(data,size);
-	TEST_ASSERT_EQUAL_INT32 (ret, -3);
+	TEST_ASSERT_EQUAL_INT32 (-3,ret);
 }
