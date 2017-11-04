@@ -189,7 +189,7 @@ void test_prn_status_check_comprueba_correctamente_el_formato_de_status(){
 	TEST_ASSERT_EQUAL_UINT8 (ret, 1);
 
 	status[3]=0x91;
-	status[4]=0x00;
+	status[4]=0x80;
 	ret=prn_status_check(status);
 	TEST_ASSERT_EQUAL_UINT8 (ret, 1);
 }
