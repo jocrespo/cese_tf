@@ -23,8 +23,9 @@ int32_t usb_comm_send(unsigned char *data2tx ,uint16_t size){
     {
         err= libusb_bulk_transfer(usb_handle, prn.ep_out,  data2tx + totalSent, size - totalSent, &alreadySent, USB_WRITE_TOUT);
         totalSent+= alreadySent;
+        printf("1 - usb_comm_send ERROR: %d\n",err);
         if(err)
- 	    printf("usb_comm_send ERROR: %d\n",err);
+        	printf("usb_comm_send ERROR: %d\n",err);
         if ((!err || err == LIBUSB_ERROR_TIMEOUT)) {
             if(--retry)
             	err= 0;
