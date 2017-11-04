@@ -61,7 +61,6 @@
     - bema.h
     - usb_comm.h
     - error.h
-    - libusb.h
 
 :flags:
   :test:
