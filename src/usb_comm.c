@@ -30,7 +30,7 @@ int32_t usb_comm_send(unsigned char *data2tx ,uint16_t size){
             err= 0;
         }
     }
-    return err ? err : totalSent;
+    return err!=0 ? err : totalSent;
 
 }
 
@@ -49,9 +49,9 @@ int32_t usb_comm_receive(unsigned char *data2rx ,uint16_t size){
 	err= libusb_bulk_transfer(usb_handle, prn.ep_in, data2rx, (int32_t)size, &received, USB_READ_TOUT);
     }
     if(err){
- 	printf("usb_comm_receive ERROR: %d\n",err);
+    	printf("usb_comm_receive ERROR: %d\n",err);
     }
-    return err ? err : received;
+    return err!=0 ? err : received;
 }
 
 
