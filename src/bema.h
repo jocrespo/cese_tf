@@ -73,5 +73,7 @@ int16_t prn_intensity_print(void);
 int16_t prn_status_refresh(void);
 int32_t prn_data_send(unsigned char *data ,uint16_t size);
 int32_t prn_data_receive(unsigned char *data ,uint16_t size);
+uint8_t prn_status_check(unsigned char *data);
+
 
 #endif /* INCLUDE_BEMA_H_ */

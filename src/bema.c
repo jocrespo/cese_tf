@@ -175,11 +175,7 @@ int16_t prn_status_refresh(void){
 				ret=-2;
 				printf("prn_status_refresh error receiving\n");
 			}else{ // We got the data
-				if ((rx_buffer[0] & 0x03) || !(rx_buffer[0] & 0x80)
-			   || (rx_buffer[1] & 0x08) || !(rx_buffer[1] & 0x01)
-			   || (rx_buffer[2] & 0x03) || !(rx_buffer[2] & 0x90)
-			   || (rx_buffer[3] & 0x2a) || !(rx_buffer[3] & 0x91)
-				 ||(rx_buffer[4] & 0x80))
+				if (prn_status_check(rx_buffer))
 				{
 					printf("prn_status_refresh error incorrect data\n");
 					ret=-3; //incorrect data
@@ -229,6 +225,24 @@ int32_t prn_data_send(unsigned char *data ,uint16_t size){
 		ret=-1;
 	}
 	return ret;
+}
+
+/**
+	Check if status received form printer are correctly formed
+	@params
+	unsigned char *data: status
+	@return
+	uint8_t: >0 if error, 0 otherwise
+
+*/
+uint8_t prn_status_check(unsigned char *data){
+	uint8_t ret;
+	ret=(data[0] & 0x03) || !(data[0] & 0x80)
+			   || (data[1] & 0x08) || !(data[1] & 0x01)
+			   || (data[2] & 0x03) || !(data[2] & 0x90)
+			   || (data[3] & 0x2a) || !(data[3] & 0x91)
+			   ||(data[4] & 0x80);
+	return ret?1:0;
 }
 
 

@@ -155,3 +155,41 @@ void test_prn_init_vuelve_con_fallo_si_falla_usb_comm_init(){
 	TEST_ASSERT_EQUAL_INT16 (ret, -1);
 }
 
+/**
+ * Se comprueba que la funcion prn_status_check analiza correctamente el formato esperado de status de la impresora
+ */
+void test_prn_status_check_comprueba_correctamente_el_formato_de_status(){
+	unsigned char status[5]={0x80,0x01,0x90,0x91,0x00};
+
+	uint8_t ret;
+
+	//caso ok
+	ret=prn_status_check(status);
+	TEST_ASSERT_EQUAL_UINT8 (ret, 0);
+
+
+	//casos nok
+	status[0]=0x83;
+	ret=prn_status_check(status);
+	TEST_ASSERT_EQUAL_UINT8 (ret, 1);
+
+	status[0]=0x80;
+	status[1]=0x09;
+	ret=prn_status_check(status);
+	TEST_ASSERT_EQUAL_UINT8 (ret, 1);
+
+	status[1]=0x01;
+	status[2]=0x93;
+	ret=prn_status_check(status);
+	TEST_ASSERT_EQUAL_UINT8 (ret, 1);
+
+	status[2]=0x90;
+	status[3]=0xbb;
+	ret=prn_status_check(status);
+	TEST_ASSERT_EQUAL_UINT8 (ret, 1);
+
+	status[3]=0x91;
+	status[4]=0x00;
+	ret=prn_status_check(status);
+	TEST_ASSERT_EQUAL_UINT8 (ret, 1);
+}
