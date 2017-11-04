@@ -31,10 +31,10 @@ void test_usb_comm_send_devuelve_el_error_correcto(){
 	uint16_t size=4;
 	unsigned char data[size];
 
-	// caso ok
+	// caso ok, pero libusb_bulk transfer no devuelve el valor de datos enviados
 	libusb_bulk_transfer_IgnoreAndReturn(0);
 	ret=usb_comm_send(data,size);
-	TEST_ASSERT_EQUAL_INT32 (size,ret);
+	TEST_ASSERT_EQUAL_INT32 (0,ret);
 
 	// casos nok
 	libusb_bulk_transfer_IgnoreAndReturn(1);
@@ -54,10 +54,10 @@ void test_usb_comm_receive_devuelve_el_error_correcto(){
 	uint16_t size=4;
 	unsigned char data[size];
 
-	// caso ok
+	// caso ok, pero libusb_bulk transfer no devuelve el valor de datos recibidos
 	libusb_bulk_transfer_IgnoreAndReturn(0);
 	ret=usb_comm_receive(data,size);
-	TEST_ASSERT_EQUAL_INT32 (size,ret);
+	TEST_ASSERT_EQUAL_INT32 (0,ret);
 
 	// casos nok
 	libusb_bulk_transfer_IgnoreAndReturn(1);
