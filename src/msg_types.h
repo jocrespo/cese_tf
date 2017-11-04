@@ -8,16 +8,15 @@
 #ifndef INCLUDE_MSG_TYPES_H_
 #define INCLUDE_MSG_TYPES_H_
 
-//mtype
 #define HOST2PRINTER_STATUS_REQ		 1
 #define HOST2PRINTER_PRINTER_REQ	 2
-#define PRINTER2HOST_STATUS		 	 3
+#define PRINTER2HOST_STATUS		 3
 #define PRINTER2HOST_PRINT_PROGRESS	 4
 #define PRINTER2HOST_PRINT_RESULT	 5
 
 #define NAME_LENGTH 21 // 20 caracteres para el nombre de archivo
 
-struct queue_msgbuf {
+struct msgbuf {
     long mtype;
     struct msg_info {
     	char mresult;

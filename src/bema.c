@@ -316,7 +316,9 @@ int16_t prn_print(unsigned char *file){
 	int16_t ret=ERR_OK;
 	int16_t readBytes=1; // init
 	unsigned char data2print[PRN_LINEA_SZ*1000]; // buffer a enviar a imprimir
+
     FILE *fp;
+
     fp=fopen(file, "r");
     if(fp==NULL){
     	ret=-1;
@@ -358,10 +360,11 @@ int16_t prn_print_raster(unsigned char *data2print, uint16_t length){
 		lineas ++;
 
     prn_cmd_raster_head_t header = {
-    	.cmd = PRN_RASTER_PRINT,
+    	.cmd = 0,
         .xL = (unsigned char)(PRN_LINEA_SZ % 256),
         .xH = (unsigned char)(PRN_LINEA_SZ / 256)
     };
+    memcpy(header.cmd,PRN_RASTER_PRINT,4);
     salto= 50; // imprimimos el grafico en mensajes de 50 lineas
 
     for (i= 0; ret == ERR_OK && (i < lineas); i+= salto) {
@@ -373,9 +376,11 @@ int16_t prn_print_raster(unsigned char *data2print, uint16_t length){
 
         // Se envia primero el header
         if (prn_data_send((unsigned char *) &header, sizeof(header)) < 0){
+	    printf("prn_print_raster header failed\n");
             ret= ERR_PRN_ERROR_R;
         }// Se envia despues los datos
-        else if ( prn_data_send(data2print+i*PRN_LINEA_SZ ,salto*PRN_LINEA_SZ)< 0) {
+        else if ( prn_data_send((unsigned char *)(data2print+(i*PRN_LINEA_SZ)) ,salto*PRN_LINEA_SZ)< 0) {
+	    printf("prn_print_raster data failed\n");
             ret= ERR_PRN_ERROR_R;
         }
     }
