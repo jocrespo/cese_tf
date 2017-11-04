@@ -63,7 +63,7 @@
     - bema.h
     - usb_comm.h
     - error.h
-    - /usr/include/libusb-1.0/*
+    - /usr/include/libusb-1.0/libusb.h
 
 :flags:
   :test:
