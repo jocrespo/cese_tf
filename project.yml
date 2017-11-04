@@ -49,6 +49,7 @@
   :mock_prefix: mock_
   :when_no_prototypes: :warn
   :enforce_strict_ordering: TRUE
+  :when_ptr: :compare_ptr
   :plugins:
     - :ignore
     - :callback
