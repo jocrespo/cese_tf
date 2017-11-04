@@ -272,40 +272,6 @@ int32_t prn_data_receive(unsigned char *data ,uint16_t size){
 }
 
 /**
-	Imprime en formato 24 bits
-	@params
-	uchar *data2print: buffer data to print
-	uint16_t length: length of data to print
-	@return
-	int16_t: -1 if error, 0 otherwise
-
-*/
-int16_t prn_print_24bits(unsigned char *data2print, uint16_t length){
-	int16_t ret;
-	int16_t err = ERR_OK;
-	int16_t i;
-	uint16_t size2send = 0;
-	unsigned char data2send[1800]; // espacio de sobra para el comando, los datos(1728), y el line feed
-
-	//Envío los comandos necsesarios para que vaya imprimiendo la totalidad de datos requeridos
-	for (i= 0; ERR_OK == err && i < length; i+= 24 * PRN_LINEA_SZ) {
-		memcpy(data2send,PRN_24BITS_GRAPHICS_PRINT,sizeof(PRN_24BITS_GRAPHICS_PRINT)); // comando
-		size2send+=sizeof(PRN_24BITS_GRAPHICS_PRINT);
-		memcpy(data2send+size2send,data2print + i, 24 * PRN_LINEA_SZ);
-		size2send+=24 * PRN_LINEA_SZ; // datos del comando
-		memcpy(data2send+size2send,PRN_CMD_LINE_FEED,sizeof(PRN_CMD_LINE_FEED));
-		size2send+=sizeof(PRN_CMD_LINE_FEED);
-		if (!prn_data_send(data2send,size2send)) {
-			bema_status.error_r = 1;
-		   err= ERR_PRN_ERROR_R;
-		}
-		memset(data2send,0,sizeof(data2send)); // Limpieza de buffer
-	}
-	return err;
-}
-
-
-/**
 	Reset Bematech printer
 	@return
 	int16_t: -1 if error, 0 otherwise
