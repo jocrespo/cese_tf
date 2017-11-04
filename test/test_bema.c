@@ -13,6 +13,7 @@
 #include "error.h"
 
 #include "mock_usb_comm.h"
+#include "mock_bema.h"
 
 void setUp(){
 
@@ -143,3 +144,37 @@ void test_prn_data_receive_devuelve_valores_correctos(){
 	TEST_ASSERT_EQUAL_INT32 (ret, -1);
 
 }
+
+
+
+/**
+ * Se comprueba que la funcion prn_reinit devuelve el valor de retorno esperado, y limpia el flag de inicilizacion del la impresora
+ */
+void test_prn_reinit_limpia_el_flag_de_inicializacion_y_devuelve_valores_correctos(){
+	int16_t ret;
+	printer_init=1;
+	usb_comm_close_Ignore();
+	prn_init_IgnoreAndReturns(0);
+	ret=prn_reinit();
+	TEST_ASSERT_EQUAL_UINT8 (printer_init,0);
+	TEST_ASSERT_EQUAL_INT16 (ret,0);
+	prn_init_IgnoreAndReturns(1);
+	TEST_ASSERT_EQUAL_INT16 (ret,1);
+}
+
+
+/**
+ * Se comprueba que la funcion prn_asb devuelve el valor de retorno esperado
+ */
+void test_prn_asb_mode_devuelve_valores_correctos(){
+	int16_t ret;
+
+	prn_data_send_IgnoreAndReturns(0);
+	ret=prn_asb_mode();
+	TEST_ASSERT_EQUAL_INT16 (ret,0);
+
+	prn_data_send_IgnoreAndReturns(1);
+	ret=prn_asb_mode();
+	TEST_ASSERT_EQUAL_INT16 (ret,1);
+}
+
