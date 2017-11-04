@@ -39,7 +39,7 @@ void test_usb_comm_send_devuelve_el_error_correcto(){
 	// casos nok
 	libusb_bulk_transfer_IgnoreAndReturn(1);
 	ret=usb_comm_send(data,size);
-	TEST_ASSERT_EQUAL_INT32 (0,ret);
+	TEST_ASSERT_EQUAL_INT32 (1,ret);
 
 	libusb_bulk_transfer_IgnoreAndReturn(-3); // Fallo desde LIBUSB
 	ret=usb_comm_send(data,size);
