@@ -1,7 +1,7 @@
 /*
  * bema_test.c
  *
- *  Created on: 23/10/2017
+ *  Created on: 10/8/2017
  *      Author: jcrespo
  */
 
@@ -155,34 +155,3 @@ void test_prn_init_vuelve_con_fallo_si_falla_usb_comm_init(){
 	TEST_ASSERT_EQUAL_INT16 (ret, -1);
 }
 
-/**
- * Se comprueba que la funcion prn_reinit devuelve el valor de retorno esperado, y limpia el flag de inicilizacion del la impresora
- *
-void test_prn_reinit_limpia_el_flag_de_inicializacion_y_devuelve_valores_correctos(){
-	int16_t ret;
-	printer_init=1;
-	usb_comm_close_Ignore();
-	prn_init_IgnoreAndReturn(0);
-	ret=prn_reinit();
-	TEST_ASSERT_EQUAL_UINT8 (printer_init,0);
-	TEST_ASSERT_EQUAL_INT16 (ret,0);
-	prn_init_IgnoreAndReturn(1);
-	TEST_ASSERT_EQUAL_INT16 (ret,1);
-}
-
-
-**
- * Se comprueba que la funcion prn_asb devuelve el valor de retorno esperado
- *
-void test_prn_asb_mode_devuelve_valores_correctos(){
-	int16_t ret;
-
-	prn_data_send_IgnoreAndReturn(0);
-	ret=prn_asb_mode();
-	TEST_ASSERT_EQUAL_INT16 (ret,0);
-
-	prn_data_send_IgnoreAndReturn(1);
-	ret=prn_asb_mode();
-	TEST_ASSERT_EQUAL_INT16 (ret,1);
-}
-*/
