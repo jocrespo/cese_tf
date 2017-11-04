@@ -28,7 +28,7 @@ void tearDown(){
  */
 void test_usb_comm_send_devuelve_el_error_correcto(){
 	int32_t ret;
-	uint16_t size;
+	uint16_t size=4;
 	unsigned char data[size];
 
 	// caso ok
@@ -51,7 +51,7 @@ void test_usb_comm_send_devuelve_el_error_correcto(){
  */
 void test_usb_comm_receive_devuelve_el_error_correcto(){
 	int32_t ret;
-	uint16_t size;
+	uint16_t size=4;
 	unsigned char data[size];
 
 	// caso ok
