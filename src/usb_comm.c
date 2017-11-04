@@ -26,8 +26,8 @@ int32_t usb_comm_send(unsigned char *data2tx ,uint16_t size){
         if(err)
  	    printf("usb_comm_send ERROR: %d\n",err);
         if ((!err || err == LIBUSB_ERROR_TIMEOUT)) {
-            retry--;
-            err= 0;
+            if(--retry)
+            	err= 0;
         }
     }
     return err!=0 ? err : totalSent;
