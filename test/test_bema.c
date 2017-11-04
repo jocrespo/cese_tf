@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "unity.h"
-//#include "bema.h"
+#include "bema.h"
 #include "error.h"
 
 #include "mock_usb_comm.h"
