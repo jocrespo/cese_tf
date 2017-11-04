@@ -150,7 +150,7 @@ void test_prn_data_receive_devuelve_valores_correctos(){
 void test_prn_init_vuelve_con_fallo_si_falla_usb_comm_init(){
 	int16_t ret;
 
-	usb_comm_receive_IgnoreAndReturn(1);
+	usb_comm_init_IgnoreAndReturn(1);
 	ret=prn_init();
 	TEST_ASSERT_EQUAL_INT16 (ret, -1);
 }
